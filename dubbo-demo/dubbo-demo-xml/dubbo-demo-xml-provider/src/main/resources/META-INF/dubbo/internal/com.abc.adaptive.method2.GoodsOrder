@@ -1,0 +1,2 @@
+alipay=com.abc.adaptive.method2.AlipayGoodsOrder
+wechat=com.abc.adaptive.method2.WechatGoodsOrder

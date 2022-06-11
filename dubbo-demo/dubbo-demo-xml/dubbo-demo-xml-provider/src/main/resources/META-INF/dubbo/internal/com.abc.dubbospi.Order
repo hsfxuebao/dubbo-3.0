@@ -1,0 +1,2 @@
+alipay=com.abc.dubbospi.AlipayOrder
+wechat,wechat2=com.abc.dubbospi.WechatOrder

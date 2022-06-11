@@ -1,0 +1,3 @@
+alipay=com.abc.adaptive.aclass.AlipayOrder
+wechat=com.abc.adaptive.aclass.WechatOrder
+adaptive=com.abc.adaptive.aclass.AdaptiveOrder
