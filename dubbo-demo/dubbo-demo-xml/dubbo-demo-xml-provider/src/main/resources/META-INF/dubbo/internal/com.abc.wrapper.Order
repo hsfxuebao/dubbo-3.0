@@ -1,4 +1,5 @@
 alipay=com.abc.wrapper.AlipayOrder
 wechat=com.abc.wrapper.WechatOrder
-wrapper=com.abc.wrapper.OrderWrapper
 wrapper2=com.abc.wrapper.OrderWrapper2
+wrapper=com.abc.wrapper.OrderWrapper
+

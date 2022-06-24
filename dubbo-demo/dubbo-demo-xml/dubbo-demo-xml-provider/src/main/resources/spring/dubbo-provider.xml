@@ -24,9 +24,9 @@
     <dubbo:application name="demo-provider">
     </dubbo:application>
 
-    <dubbo:config-center address="zookeeper://zookeeperOS:2181"/>
-    <dubbo:metadata-report address="zookeeper://zookeeperOS:2181"/>
-    <dubbo:registry address="zookeeper://zookeeperOS:2181" />
+    <dubbo:config-center address="zookeeper://127.0.0.1:2181"/>
+    <dubbo:metadata-report address="zookeeper://127.0.0.1:2181"/>
+    <dubbo:registry address="zookeeper://127.0.0.1:2181" />
     <!--由四台主机构成的一个注册中心（标准写法）-->
     <!--<dubbo:registry address="zookeeper://zookeeperOS1:2181?backup=zookeeperOS2:2181,zookeeperOS3:2181,zookeeperOS4:2181" />-->
     <!--以上写法还等价于以下写法-->

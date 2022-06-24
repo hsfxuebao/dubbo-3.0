@@ -16,6 +16,8 @@
  */
 package org.apache.dubbo.config.spring.context;
 
+import static org.springframework.util.ObjectUtils.nullSafeEquals;
+
 import org.apache.dubbo.config.DubboShutdownHook;
 import org.apache.dubbo.config.bootstrap.BootstrapTakeoverMode;
 import org.apache.dubbo.config.bootstrap.DubboBootstrap;
@@ -30,8 +32,6 @@ import org.springframework.context.event.ApplicationContextEvent;
 import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.core.Ordered;
-
-import static org.springframework.util.ObjectUtils.nullSafeEquals;
 
 /**
  * The {@link ApplicationListener} for {@link DubboBootstrap}'s lifecycle when the {@link ContextRefreshedEvent}
@@ -106,8 +106,10 @@ public class DubboBootstrapApplicationListener implements ApplicationListener, A
             DubboBootstrapStartStopListenerSpringAdapter.applicationContext = event.getApplicationContext();
         }
 
+        // 容器刷新事件（容器创建、刷新会引发该事件）
         if (event instanceof ContextRefreshedEvent) {
             onContextRefreshedEvent((ContextRefreshedEvent) event);
+        // 容器关闭事件
         } else if (event instanceof ContextClosedEvent) {
             onContextClosedEvent((ContextClosedEvent) event);
         }

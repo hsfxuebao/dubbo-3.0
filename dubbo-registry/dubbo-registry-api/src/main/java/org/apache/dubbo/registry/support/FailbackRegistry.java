@@ -16,16 +16,9 @@
  */
 package org.apache.dubbo.registry.support;
 
-import org.apache.dubbo.common.URL;
-import org.apache.dubbo.common.timer.HashedWheelTimer;
-import org.apache.dubbo.common.utils.CollectionUtils;
-import org.apache.dubbo.common.utils.NamedThreadFactory;
-import org.apache.dubbo.registry.NotifyListener;
-import org.apache.dubbo.registry.retry.FailedRegisteredTask;
-import org.apache.dubbo.registry.retry.FailedSubscribedTask;
-import org.apache.dubbo.registry.retry.FailedUnregisteredTask;
-import org.apache.dubbo.registry.retry.FailedUnsubscribedTask;
-import org.apache.dubbo.remoting.Constants;
+import static org.apache.dubbo.common.constants.CommonConstants.FILE_KEY;
+import static org.apache.dubbo.registry.Constants.DEFAULT_REGISTRY_RETRY_PERIOD;
+import static org.apache.dubbo.registry.Constants.REGISTRY_RETRY_PERIOD_KEY;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -36,9 +29,16 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
-import static org.apache.dubbo.common.constants.CommonConstants.FILE_KEY;
-import static org.apache.dubbo.registry.Constants.DEFAULT_REGISTRY_RETRY_PERIOD;
-import static org.apache.dubbo.registry.Constants.REGISTRY_RETRY_PERIOD_KEY;
+import org.apache.dubbo.common.URL;
+import org.apache.dubbo.common.timer.HashedWheelTimer;
+import org.apache.dubbo.common.utils.CollectionUtils;
+import org.apache.dubbo.common.utils.NamedThreadFactory;
+import org.apache.dubbo.registry.NotifyListener;
+import org.apache.dubbo.registry.retry.FailedRegisteredTask;
+import org.apache.dubbo.registry.retry.FailedSubscribedTask;
+import org.apache.dubbo.registry.retry.FailedUnregisteredTask;
+import org.apache.dubbo.registry.retry.FailedUnsubscribedTask;
+import org.apache.dubbo.remoting.Constants;
 
 /**
  * FailbackRegistry. (SPI, Prototype, ThreadSafe)
@@ -295,6 +295,7 @@ public abstract class FailbackRegistry extends AbstractRegistry {
         removeFailedSubscribed(url, listener);
         try {
             // Sending a subscription request to the server side
+            // todo
             doSubscribe(url, listener);  // 继续订阅
         } catch (Exception e) {
             Throwable t = e;

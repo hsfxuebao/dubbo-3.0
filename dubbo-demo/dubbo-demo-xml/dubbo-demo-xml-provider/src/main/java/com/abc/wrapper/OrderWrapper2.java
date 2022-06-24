@@ -1,7 +1,9 @@
 package com.abc.wrapper;
 
 import org.apache.dubbo.common.URL;
+import org.apache.dubbo.common.extension.Activate;
 
+@Activate(order = 10)
 public class OrderWrapper2 implements Order {
     private Order order;
 

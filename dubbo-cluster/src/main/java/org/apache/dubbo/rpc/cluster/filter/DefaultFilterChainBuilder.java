@@ -16,19 +16,23 @@
  */
 package org.apache.dubbo.rpc.cluster.filter;
 
+import java.util.List;
+
 import org.apache.dubbo.common.extension.Activate;
 import org.apache.dubbo.common.extension.ExtensionLoader;
 import org.apache.dubbo.rpc.Filter;
 import org.apache.dubbo.rpc.Invoker;
 import org.apache.dubbo.rpc.cluster.ClusterInvoker;
 
-import java.util.List;
-
 @Activate(order = 0)
 public class DefaultFilterChainBuilder implements FilterChainBuilder {
 
     /**
      * build consumer/provider filter chain
+     *
+     * 在构建调用链时方法先获取Filter列表，然后创建与Fitler数量一样多Invoker
+     * 结点，接着将这些结点串联在一起，构成一个链表，最后将这个链的首结点返回，随后的调用中，将从首结点开始，依次调用各个结点，
+     * 完成调用后沿调用链返回。这里各个Invoker结点的串联是通过与其关联的invoke 方法来完成的。
      */
     @Override
     public <T> Invoker<T> buildInvokerChain(final Invoker<T> originalInvoker, String key, String group) {
@@ -38,7 +42,9 @@ public class DefaultFilterChainBuilder implements FilterChainBuilder {
         if (!filters.isEmpty()) {
             for (int i = filters.size() - 1; i >= 0; i--) {
                 final Filter filter = filters.get(i);
+                // 调用buildInvokerChain时会传入invoker参数。
                 final Invoker<T> next = last;
+                // 通过循环遍历获取到的Filter，同时创建Invoker结点，每个结点对应一个Filter。此时循环内部定义了next指针。
                 last = new FilterChainNode<>(originalInvoker, next, filter);
             }
         }

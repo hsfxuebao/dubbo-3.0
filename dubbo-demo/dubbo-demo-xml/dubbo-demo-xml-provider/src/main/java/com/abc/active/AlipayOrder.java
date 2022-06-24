@@ -7,6 +7,7 @@ import org.apache.dubbo.common.extension.Activate;
 // group是一个“大范围标识”，value为一个“小范围标识”。
 // 一个扩展类一旦指定了小范围标识value，那么这个大范围标识就不再起作用了
 @Activate(group = "online", value = "alipay")
+// @Activate(group = "online", value = {"alipay","alipay1"})
 public class AlipayOrder implements Order {
     @Override
     public String way() {

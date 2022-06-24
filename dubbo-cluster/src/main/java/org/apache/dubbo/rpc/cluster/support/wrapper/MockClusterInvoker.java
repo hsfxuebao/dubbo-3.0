@@ -16,6 +16,11 @@
  */
 package org.apache.dubbo.rpc.cluster.support.wrapper;
 
+import static org.apache.dubbo.rpc.Constants.MOCK_KEY;
+import static org.apache.dubbo.rpc.cluster.Constants.INVOCATION_NEED_MOCK;
+
+import java.util.List;
+
 import org.apache.dubbo.common.URL;
 import org.apache.dubbo.common.logger.Logger;
 import org.apache.dubbo.common.logger.LoggerFactory;
@@ -30,11 +35,6 @@ import org.apache.dubbo.rpc.RpcInvocation;
 import org.apache.dubbo.rpc.cluster.ClusterInvoker;
 import org.apache.dubbo.rpc.cluster.Directory;
 import org.apache.dubbo.rpc.support.MockInvoker;
-
-import java.util.List;
-
-import static org.apache.dubbo.rpc.Constants.MOCK_KEY;
-import static org.apache.dubbo.rpc.cluster.Constants.INVOCATION_NEED_MOCK;
 
 public class MockClusterInvoker<T> implements ClusterInvoker<T> {
 

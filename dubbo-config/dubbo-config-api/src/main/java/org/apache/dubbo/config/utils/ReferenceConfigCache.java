@@ -16,18 +16,18 @@
  */
 package org.apache.dubbo.config.utils;
 
-import org.apache.dubbo.common.utils.CollectionUtils;
-import org.apache.dubbo.common.utils.StringUtils;
-import org.apache.dubbo.config.ReferenceConfigBase;
-import org.apache.dubbo.rpc.model.ApplicationModel;
-import org.apache.dubbo.rpc.service.Destroyable;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+
+import org.apache.dubbo.common.utils.CollectionUtils;
+import org.apache.dubbo.common.utils.StringUtils;
+import org.apache.dubbo.config.ReferenceConfigBase;
+import org.apache.dubbo.rpc.model.ApplicationModel;
+import org.apache.dubbo.rpc.service.Destroyable;
 
 /**
  * A simple util class for cache {@link ReferenceConfigBase}.
@@ -118,7 +118,7 @@ public class ReferenceConfigCache {
 
         // 返回内层map的value，即当前服务标识对应的代理对象
         return (T) proxiesOfType.computeIfAbsent(key, _k -> {
-            // 创建代理对象
+            // todo 创建代理对象
             Object proxy = referenceConfig.get();
             referredReferences.put(key, referenceConfig);
             return proxy;
