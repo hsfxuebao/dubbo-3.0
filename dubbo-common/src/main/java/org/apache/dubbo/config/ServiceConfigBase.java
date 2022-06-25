@@ -16,15 +16,8 @@
  */
 package org.apache.dubbo.config;
 
-import org.apache.dubbo.common.URL;
-import org.apache.dubbo.common.utils.CollectionUtils;
-import org.apache.dubbo.common.utils.StringUtils;
-import org.apache.dubbo.config.annotation.Service;
-import org.apache.dubbo.config.support.Parameter;
-import org.apache.dubbo.rpc.model.ApplicationModel;
-import org.apache.dubbo.rpc.model.ServiceMetadata;
-import org.apache.dubbo.rpc.service.GenericService;
-import org.apache.dubbo.rpc.support.ProtocolUtils;
+import static org.apache.dubbo.common.constants.CommonConstants.COMMA_SPLIT_PATTERN;
+import static org.apache.dubbo.common.constants.CommonConstants.DUBBO;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -35,8 +28,15 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import static org.apache.dubbo.common.constants.CommonConstants.COMMA_SPLIT_PATTERN;
-import static org.apache.dubbo.common.constants.CommonConstants.DUBBO;
+import org.apache.dubbo.common.URL;
+import org.apache.dubbo.common.utils.CollectionUtils;
+import org.apache.dubbo.common.utils.StringUtils;
+import org.apache.dubbo.config.annotation.Service;
+import org.apache.dubbo.config.support.Parameter;
+import org.apache.dubbo.rpc.model.ApplicationModel;
+import org.apache.dubbo.rpc.model.ServiceMetadata;
+import org.apache.dubbo.rpc.service.GenericService;
+import org.apache.dubbo.rpc.support.ProtocolUtils;
 
 /**
  * ServiceConfig
@@ -52,11 +52,13 @@ public abstract class ServiceConfigBase<T> extends AbstractServiceConfig {
     /**
      * The interface class of the exported service
      */
+    //接口class
     protected Class<?> interfaceClass;
 
     /**
      * The reference of the interface implementation
      */
+    // 具体实现类
     protected T ref;
 
     /**
@@ -67,6 +69,7 @@ public abstract class ServiceConfigBase<T> extends AbstractServiceConfig {
     /**
      * The provider configuration
      */
+    // 关于provider的配置
     protected ProviderConfig provider;
 
     /**
@@ -77,6 +80,7 @@ public abstract class ServiceConfigBase<T> extends AbstractServiceConfig {
     /**
      * whether it is a GenericService
      */
+    // 范化
     protected volatile String generic;
 
 

@@ -16,6 +16,10 @@
  */
 package org.apache.dubbo.rpc.proxy;
 
+import java.lang.reflect.InvocationTargetException;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+
 import org.apache.dubbo.common.URL;
 import org.apache.dubbo.common.logger.Logger;
 import org.apache.dubbo.common.logger.LoggerFactory;
@@ -27,10 +31,6 @@ import org.apache.dubbo.rpc.Invoker;
 import org.apache.dubbo.rpc.Result;
 import org.apache.dubbo.rpc.RpcContext;
 import org.apache.dubbo.rpc.RpcException;
-
-import java.lang.reflect.InvocationTargetException;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
 
 /**
  * This Invoker works on provider side, delegates RPC to interface implementation.
@@ -77,7 +77,12 @@ public abstract class AbstractProxyInvoker<T> implements Invoker<T> {
     @Override
     public void destroy() {
     }
-
+    /**
+     * 调用
+     * @param invocation 调用实体
+     * @return 结果实体
+     * @throws RpcException
+     */
     @Override
     public Result invoke(Invocation invocation) throws RpcException {
         try {
@@ -116,6 +121,7 @@ public abstract class AbstractProxyInvoker<T> implements Invoker<T> {
         return CompletableFuture.completedFuture(value);
     }
 
+    //实际调用子类实现
     protected abstract Object doInvoke(T proxy, String methodName, Class<?>[] parameterTypes, Object[] arguments) throws Throwable;
 
     @Override

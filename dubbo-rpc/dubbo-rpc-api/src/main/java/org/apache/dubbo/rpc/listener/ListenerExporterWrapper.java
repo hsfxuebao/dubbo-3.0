@@ -16,14 +16,14 @@
  */
 package org.apache.dubbo.rpc.listener;
 
+import java.util.List;
+
 import org.apache.dubbo.common.logger.Logger;
 import org.apache.dubbo.common.logger.LoggerFactory;
 import org.apache.dubbo.common.utils.CollectionUtils;
 import org.apache.dubbo.rpc.Exporter;
 import org.apache.dubbo.rpc.ExporterListener;
 import org.apache.dubbo.rpc.Invoker;
-
-import java.util.List;
 
 /**
  * ListenerExporter
@@ -44,9 +44,11 @@ public class ListenerExporterWrapper<T> implements Exporter<T> {
         this.listeners = listeners;
         if (CollectionUtils.isNotEmpty(listeners)) {
             RuntimeException exception = null;
+            // 遍历通知
             for (ExporterListener listener : listeners) {
                 if (listener != null) {
                     try {
+                        // 通知
                         listener.exported(this);
                     } catch (RuntimeException t) {
                         logger.error(t.getMessage(), t);

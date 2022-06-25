@@ -16,6 +16,15 @@
  */
 package org.apache.dubbo.remoting.transport;
 
+import static org.apache.dubbo.common.constants.CommonConstants.ANYHOST_KEY;
+import static org.apache.dubbo.common.constants.CommonConstants.ANYHOST_VALUE;
+import static org.apache.dubbo.remoting.Constants.ACCEPTS_KEY;
+import static org.apache.dubbo.remoting.Constants.DEFAULT_ACCEPTS;
+
+import java.net.InetSocketAddress;
+import java.util.Collection;
+import java.util.concurrent.ExecutorService;
+
 import org.apache.dubbo.common.URL;
 import org.apache.dubbo.common.extension.ExtensionLoader;
 import org.apache.dubbo.common.logger.Logger;
@@ -29,15 +38,6 @@ import org.apache.dubbo.remoting.Constants;
 import org.apache.dubbo.remoting.RemotingException;
 import org.apache.dubbo.remoting.RemotingServer;
 
-import java.net.InetSocketAddress;
-import java.util.Collection;
-import java.util.concurrent.ExecutorService;
-
-import static org.apache.dubbo.common.constants.CommonConstants.ANYHOST_KEY;
-import static org.apache.dubbo.common.constants.CommonConstants.ANYHOST_VALUE;
-import static org.apache.dubbo.remoting.Constants.ACCEPTS_KEY;
-import static org.apache.dubbo.remoting.Constants.DEFAULT_ACCEPTS;
-
 /**
  * AbstractServer
  */
@@ -45,9 +45,13 @@ public abstract class AbstractServer extends AbstractEndpoint implements Remotin
 
     protected static final String SERVER_THREAD_POOL_NAME = "DubboServerHandler";
     private static final Logger logger = LoggerFactory.getLogger(AbstractServer.class);
+    // 线程池
     ExecutorService executor;
+    // 服务地址
     private InetSocketAddress localAddress;
+    //绑定地址
     private InetSocketAddress bindAddress;
+    // 服务器最大可接受连接数
     private int accepts;
 
     private ExecutorRepository executorRepository = ExtensionLoader.getExtensionLoader(ExecutorRepository.class).getDefaultExtension();
@@ -62,6 +66,7 @@ public abstract class AbstractServer extends AbstractEndpoint implements Remotin
             bindIp = ANYHOST_VALUE;
         }
         bindAddress = new InetSocketAddress(bindIp, bindPort);
+        // 服务器最大可接受连接数
         this.accepts = url.getParameter(ACCEPTS_KEY, DEFAULT_ACCEPTS);
         try {
             doOpen(); // 创建并启动Netty Server
@@ -72,6 +77,7 @@ public abstract class AbstractServer extends AbstractEndpoint implements Remotin
             throw new RemotingException(url.toInetSocketAddress(), null, "Failed to bind " + getClass().getSimpleName()
                     + " on " + getLocalAddress() + ", cause: " + t.getMessage(), t);
         }
+        // 获取线程池
         executor = executorRepository.createExecutorIfAbsent(url);
     }
 

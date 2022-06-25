@@ -60,13 +60,16 @@ public class Exchangers {
     }
 
     public static ExchangeServer bind(URL url, ExchangeHandler handler) throws RemotingException {
+        //验证
         if (url == null) {
             throw new IllegalArgumentException("url == null");
         }
         if (handler == null) {
             throw new IllegalArgumentException("handler == null");
         }
+        // 如果没有codec  的话 就设置为exchange
         url = url.addParameterIfAbsent(Constants.CODEC_KEY, "exchange");
+        // exchanger.bind()
         return getExchanger(url).bind(url, handler);
     }
 
@@ -110,6 +113,7 @@ public class Exchangers {
     }
 
     public static Exchanger getExchanger(URL url) {
+        // 获取exchanger  缺省header
         String type = url.getParameter(Constants.EXCHANGER_KEY, Constants.DEFAULT_EXCHANGER);
         return getExchanger(type);
     }

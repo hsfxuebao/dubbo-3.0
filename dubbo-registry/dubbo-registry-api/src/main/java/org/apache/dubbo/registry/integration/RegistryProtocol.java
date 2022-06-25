@@ -212,10 +212,10 @@ public class RegistryProtocol implements Protocol {
         providerUrl = overrideUrlWithConfig(providerUrl, overrideSubscribeListener);
 
         // 服务暴露，即将服务的exporter写入到缓存map
-        //export invoker
+        //export invoker doLocalExport表示本地启动服务不包括去注册中心注册
         final ExporterChangeableWrapper<T> exporter = doLocalExport(originInvoker, providerUrl);
 
-        // url to registry  获取注册中心实例
+        // url to registry  todo 获取注册中心实例
         final Registry registry = getRegistry(registryUrl);
         final URL registeredProviderUrl = getUrlToRegistry(providerUrl, registryUrl);
 
@@ -259,11 +259,15 @@ public class RegistryProtocol implements Protocol {
     }
 
     @SuppressWarnings("unchecked")
+    // 暴露服务
     private <T> ExporterChangeableWrapper<T> doLocalExport(final Invoker<T> originInvoker, URL providerUrl) {
         String key = getCacheKey(originInvoker);
 
+        //之前没有暴露过 bounds缓存起来
         return (ExporterChangeableWrapper<T>) bounds.computeIfAbsent(key, s -> {
+            // 封装 InvokerDelegete  将url封装起来了
             Invoker<?> invokerDelegate = new InvokerDelegate<>(originInvoker, providerUrl);
+
             return new ExporterChangeableWrapper<>((Exporter<T>) protocol.export(invokerDelegate), originInvoker);
         });
     }
@@ -595,7 +599,7 @@ public class RegistryProtocol implements Protocol {
         }
         return url;
     }
-
+    // InvokerDelegete  委托类  将provider 的url 进行缓存
     public static class InvokerDelegate<T> extends InvokerWrapper<T> {
         private final Invoker<T> invoker;
 
@@ -607,8 +611,9 @@ public class RegistryProtocol implements Protocol {
             super(invoker, url);
             this.invoker = invoker;
         }
-
+        // 获取invoker
         public Invoker<T> getInvoker() {
+            // 如果是 委托类的话，就获取委托类里面的那个
             if (invoker instanceof InvokerDelegate) {
                 return ((InvokerDelegate<T>) invoker).getInvoker();
             } else {

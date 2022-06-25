@@ -28,7 +28,7 @@ import org.apache.dubbo.common.extension.SPI;
  *
  * @see org.apache.dubbo.remoting.Transporters
  */
-@SPI("netty")
+@SPI("netty") // 默认是netty4的
 public interface Transporter {
 
     /**
