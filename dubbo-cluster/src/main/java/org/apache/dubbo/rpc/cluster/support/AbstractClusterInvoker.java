@@ -16,6 +16,17 @@
  */
 package org.apache.dubbo.rpc.cluster.support;
 
+import static org.apache.dubbo.common.constants.CommonConstants.DEFAULT_LOADBALANCE;
+import static org.apache.dubbo.common.constants.CommonConstants.LOADBALANCE_KEY;
+import static org.apache.dubbo.rpc.cluster.Constants.CLUSTER_AVAILABLE_CHECK_KEY;
+import static org.apache.dubbo.rpc.cluster.Constants.CLUSTER_STICKY_KEY;
+import static org.apache.dubbo.rpc.cluster.Constants.DEFAULT_CLUSTER_AVAILABLE_CHECK;
+import static org.apache.dubbo.rpc.cluster.Constants.DEFAULT_CLUSTER_STICKY;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import org.apache.dubbo.common.URL;
 import org.apache.dubbo.common.Version;
 import org.apache.dubbo.common.extension.ExtensionLoader;
@@ -33,17 +44,6 @@ import org.apache.dubbo.rpc.cluster.ClusterInvoker;
 import org.apache.dubbo.rpc.cluster.Directory;
 import org.apache.dubbo.rpc.cluster.LoadBalance;
 import org.apache.dubbo.rpc.support.RpcUtils;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import static org.apache.dubbo.common.constants.CommonConstants.DEFAULT_LOADBALANCE;
-import static org.apache.dubbo.common.constants.CommonConstants.LOADBALANCE_KEY;
-import static org.apache.dubbo.rpc.cluster.Constants.CLUSTER_AVAILABLE_CHECK_KEY;
-import static org.apache.dubbo.rpc.cluster.Constants.CLUSTER_STICKY_KEY;
-import static org.apache.dubbo.rpc.cluster.Constants.DEFAULT_CLUSTER_AVAILABLE_CHECK;
-import static org.apache.dubbo.rpc.cluster.Constants.DEFAULT_CLUSTER_STICKY;
 
 /**
  * AbstractClusterInvoker
@@ -299,9 +299,9 @@ public abstract class AbstractClusterInvoker<T> implements ClusterInvoker<T> {
 //            ((RpcInvocation) invocation).addObjectAttachmentsIfAbsent(contextAttachments);
 //        }
 
-        // 通过路由策略，将不符合路由规则的invoker过滤掉
+        // 通过路由策略，将不符合路由规则的invoker过滤掉，获取所有提供者的集合
         List<Invoker<T>> invokers = list(invocation);
-        // 获取负载均衡策略，并创建相应的负载均衡实例
+        // 获取负载均衡策略，并创建相应的负载均衡实例,默认是random
         LoadBalance loadbalance = initLoadBalance(invokers, invocation);
         RpcUtils.attachInvocationIdIfAsync(getUrl(), invocation);
         // 调用具体的集群容错策略中的doInvoke()
@@ -347,7 +347,14 @@ public abstract class AbstractClusterInvoker<T> implements ClusterInvoker<T> {
     protected abstract Result doInvoke(Invocation invocation, List<Invoker<T>> invokers,
                                        LoadBalance loadbalance) throws RpcException;
 
+    /**
+     * 获取所有服务提供者的invoker
+     * @param invocation
+     * @return
+     * @throws RpcException
+     */
     protected List<Invoker<T>> list(Invocation invocation) throws RpcException {
+        // 从directory 中获取所有的invoker
         return getDirectory().list(invocation);
     }
 

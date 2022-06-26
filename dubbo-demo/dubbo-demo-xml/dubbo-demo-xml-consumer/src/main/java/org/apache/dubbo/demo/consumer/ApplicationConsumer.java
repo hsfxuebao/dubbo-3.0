@@ -29,10 +29,10 @@ public class ApplicationConsumer {
         context.start();
         GreetingService greetingService = context.getBean("greetingService", GreetingService.class);
 
-        // while (true) {
+         while (true) {
             String greetings = greetingService.hello();
             System.out.println("result =========================== " + greetings);
             Thread.sleep(5000);
-        // }
+         }
     }
 }

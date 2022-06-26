@@ -202,7 +202,7 @@ public abstract class FailbackRegistry extends AbstractRegistry {
         removeFailedUnregistered(url);
         try {
             // Sending a registration request to the server side
-            doRegister(url);  // 继续注册
+            doRegister(url);  // todo 继续注册
         } catch (Exception e) {
             Throwable t = e;
 

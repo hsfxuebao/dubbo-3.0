@@ -16,6 +16,18 @@
  */
 package org.apache.dubbo.rpc.cluster.directory;
 
+import static org.apache.dubbo.common.constants.CommonConstants.DUBBO;
+import static org.apache.dubbo.common.constants.CommonConstants.INTERFACE_KEY;
+import static org.apache.dubbo.common.constants.CommonConstants.MONITOR_KEY;
+import static org.apache.dubbo.common.constants.CommonConstants.PATH_KEY;
+import static org.apache.dubbo.common.constants.CommonConstants.PROTOCOL_KEY;
+import static org.apache.dubbo.rpc.cluster.Constants.CONSUMER_URL_KEY;
+import static org.apache.dubbo.rpc.cluster.Constants.REFER_KEY;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.dubbo.common.URL;
 import org.apache.dubbo.common.logger.Logger;
 import org.apache.dubbo.common.logger.LoggerFactory;
@@ -27,18 +39,6 @@ import org.apache.dubbo.rpc.cluster.Directory;
 import org.apache.dubbo.rpc.cluster.Router;
 import org.apache.dubbo.rpc.cluster.RouterChain;
 import org.apache.dubbo.rpc.cluster.support.ClusterUtils;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-
-import static org.apache.dubbo.common.constants.CommonConstants.DUBBO;
-import static org.apache.dubbo.common.constants.CommonConstants.INTERFACE_KEY;
-import static org.apache.dubbo.common.constants.CommonConstants.MONITOR_KEY;
-import static org.apache.dubbo.common.constants.CommonConstants.PATH_KEY;
-import static org.apache.dubbo.common.constants.CommonConstants.PROTOCOL_KEY;
-import static org.apache.dubbo.rpc.cluster.Constants.CONSUMER_URL_KEY;
-import static org.apache.dubbo.rpc.cluster.Constants.REFER_KEY;
 
 /**
  * Abstract implementation of Directory: Invoker list returned from this Directory's list method have been filtered by Routers
@@ -108,10 +108,11 @@ public abstract class AbstractDirectory<T> implements Directory<T> {
 
     @Override
     public List<Invoker<T>> list(Invocation invocation) throws RpcException {
+        // 判断是否销毁
         if (destroyed) {
             throw new RpcException("Directory already destroyed .url: " + getUrl());
         }
-
+        // 调用子类实现
         return doList(invocation);
     }
 

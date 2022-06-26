@@ -16,6 +16,19 @@
  */
 package org.apache.dubbo.rpc.protocol;
 
+import static org.apache.dubbo.remoting.Constants.DEFAULT_REMOTING_SERIALIZATION;
+import static org.apache.dubbo.remoting.Constants.SERIALIZATION_KEY;
+import static org.apache.dubbo.rpc.Constants.SERIALIZATION_ID_KEY;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
+
 import org.apache.dubbo.common.Node;
 import org.apache.dubbo.common.URL;
 import org.apache.dubbo.common.Version;
@@ -41,19 +54,6 @@ import org.apache.dubbo.rpc.RpcException;
 import org.apache.dubbo.rpc.RpcInvocation;
 import org.apache.dubbo.rpc.protocol.dubbo.FutureAdapter;
 import org.apache.dubbo.rpc.support.RpcUtils;
-
-import java.lang.reflect.InvocationTargetException;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
-
-import static org.apache.dubbo.remoting.Constants.DEFAULT_REMOTING_SERIALIZATION;
-import static org.apache.dubbo.remoting.Constants.SERIALIZATION_KEY;
-import static org.apache.dubbo.rpc.Constants.SERIALIZATION_ID_KEY;
 
 /**
  * This Invoker works on Consumer side.
@@ -175,6 +175,7 @@ public abstract class AbstractInvoker<T> implements Invoker<T> {
         prepareInvocation(invocation);
 
         // do invoke rpc invocation and return async result
+        // todo
         AsyncRpcResult asyncResult = doInvokeAndReturn(invocation);  // 远程调用
 
         // wait rpc result if sync  同步调用，这里将阻塞
@@ -184,6 +185,7 @@ public abstract class AbstractInvoker<T> implements Invoker<T> {
     }
 
     private void prepareInvocation(RpcInvocation inv) {
+        //设置invoker ，将自己设置进去
         inv.setInvoker(this);
 
         addInvocationAttachments(inv);
@@ -230,6 +232,7 @@ public abstract class AbstractInvoker<T> implements Invoker<T> {
     private AsyncRpcResult doInvokeAndReturn(RpcInvocation invocation) {
         AsyncRpcResult asyncResult;
         try {
+            // todo
             asyncResult = (AsyncRpcResult) doInvoke(invocation);
         } catch (InvocationTargetException e) {
             Throwable te = e.getTargetException();

@@ -30,7 +30,7 @@ import org.apache.dubbo.rpc.RpcException;
  * <a href="http://en.wikipedia.org/wiki/Fault-tolerant_system">Fault-Tolerant</a>
  *
  */
-@SPI(Cluster.DEFAULT)
+@SPI(Cluster.DEFAULT) // 默认是failover 失败重试
 public interface Cluster {
 
     String DEFAULT = "failover";

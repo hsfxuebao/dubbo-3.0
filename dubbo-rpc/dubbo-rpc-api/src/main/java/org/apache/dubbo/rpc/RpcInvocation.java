@@ -16,14 +16,13 @@
  */
 package org.apache.dubbo.rpc;
 
-import org.apache.dubbo.common.URL;
-import org.apache.dubbo.common.utils.ReflectUtils;
-import org.apache.dubbo.common.utils.StringUtils;
-import org.apache.dubbo.rpc.model.ApplicationModel;
-import org.apache.dubbo.rpc.model.MethodDescriptor;
-import org.apache.dubbo.rpc.model.ServiceDescriptor;
-import org.apache.dubbo.rpc.model.ServiceRepository;
-import org.apache.dubbo.rpc.support.RpcUtils;
+import static org.apache.dubbo.common.constants.CommonConstants.APPLICATION_KEY;
+import static org.apache.dubbo.common.constants.CommonConstants.GROUP_KEY;
+import static org.apache.dubbo.common.constants.CommonConstants.INTERFACE_KEY;
+import static org.apache.dubbo.common.constants.CommonConstants.PATH_KEY;
+import static org.apache.dubbo.common.constants.CommonConstants.TIMEOUT_KEY;
+import static org.apache.dubbo.common.constants.CommonConstants.VERSION_KEY;
+import static org.apache.dubbo.rpc.Constants.TOKEN_KEY;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
@@ -34,13 +33,14 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Stream;
 
-import static org.apache.dubbo.common.constants.CommonConstants.APPLICATION_KEY;
-import static org.apache.dubbo.common.constants.CommonConstants.GROUP_KEY;
-import static org.apache.dubbo.common.constants.CommonConstants.INTERFACE_KEY;
-import static org.apache.dubbo.common.constants.CommonConstants.PATH_KEY;
-import static org.apache.dubbo.common.constants.CommonConstants.TIMEOUT_KEY;
-import static org.apache.dubbo.common.constants.CommonConstants.VERSION_KEY;
-import static org.apache.dubbo.rpc.Constants.TOKEN_KEY;
+import org.apache.dubbo.common.URL;
+import org.apache.dubbo.common.utils.ReflectUtils;
+import org.apache.dubbo.common.utils.StringUtils;
+import org.apache.dubbo.rpc.model.ApplicationModel;
+import org.apache.dubbo.rpc.model.MethodDescriptor;
+import org.apache.dubbo.rpc.model.ServiceDescriptor;
+import org.apache.dubbo.rpc.model.ServiceRepository;
+import org.apache.dubbo.rpc.support.RpcUtils;
 
 /**
  * RPC Invocation.
@@ -54,19 +54,19 @@ public class RpcInvocation implements Invocation, Serializable {
     private String targetServiceUniqueName;
     private String protocolServiceKey;
 
-    private String methodName;
-    private String serviceName;
+    private String methodName; // 方法名
+    private String serviceName; //
 
-    private transient Class<?>[] parameterTypes;
+    private transient Class<?>[] parameterTypes; // 参数类型
     private String parameterTypesDesc;
     private String[] compatibleParamSignatures;
 
-    private Object[] arguments;
+    private Object[] arguments; // 参数值
 
     /**
      * Passed to the remote server during RPC call
      */
-    private Map<String, Object> attachments;
+    private Map<String, Object> attachments; // 一些附加信息
 
     /**
      * Only used on the caller side, will not appear on the wire.

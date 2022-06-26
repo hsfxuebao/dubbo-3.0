@@ -16,6 +16,14 @@
  */
 package org.apache.dubbo.rpc.cluster.support;
 
+import static org.apache.dubbo.common.constants.CommonConstants.DEFAULT_RETRIES;
+import static org.apache.dubbo.common.constants.CommonConstants.RETRIES_KEY;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import org.apache.dubbo.common.Version;
 import org.apache.dubbo.common.logger.Logger;
 import org.apache.dubbo.common.logger.LoggerFactory;
@@ -28,14 +36,6 @@ import org.apache.dubbo.rpc.RpcException;
 import org.apache.dubbo.rpc.cluster.Directory;
 import org.apache.dubbo.rpc.cluster.LoadBalance;
 import org.apache.dubbo.rpc.support.RpcUtils;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import static org.apache.dubbo.common.constants.CommonConstants.DEFAULT_RETRIES;
-import static org.apache.dubbo.common.constants.CommonConstants.RETRIES_KEY;
 
 /**
  * When invoke fails, log the initial error and retry other invokers (retry n times, which means at most n different invokers will be invoked)
@@ -52,6 +52,14 @@ public class FailoverClusterInvoker<T> extends AbstractClusterInvoker<T> {
         super(directory);
     }
 
+    /**
+     * 进行调用
+     * @param invocation 封装调用信息实体
+     * @param invokers 服务提供者invoker集合
+     * @param loadbalance 具体某个负载均衡策略
+     * @return 执行结果
+     * @throws RpcException
+     */
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
     public Result doInvoke(Invocation invocation, final List<Invoker<T>> invokers, LoadBalance loadbalance) throws RpcException {
@@ -87,6 +95,7 @@ public class FailoverClusterInvoker<T> extends AbstractClusterInvoker<T> {
             try {
                 // 远程调用
                 Result result = invokeWithContext(invoker, invocation);
+                //重试过程中，将最后一次调用的异常信息以 warn 级别日志输出
                 if (le != null && logger.isWarnEnabled()) {
                     logger.warn("Although retry the method " + methodName
                             + " in the service " + getInterface().getName()
@@ -100,16 +109,20 @@ public class FailoverClusterInvoker<T> extends AbstractClusterInvoker<T> {
                 }
                 return result;
             } catch (RpcException e) {
+                // 如果是业务性质的异常，不再重试，直接抛出
                 if (e.isBiz()) { // biz exception.
                     throw e;
                 }
+                // 其他性质的异常统一封装成RpcException
                 le = e;
             } catch (Throwable e) {
                 le = new RpcException(e.getMessage(), e);
             } finally {
+                // 将提供者的地址添加到providers
                 providers.add(invoker.getUrl().getAddress());
             }
         }  // end-for
+        // 最后抛出异常
         throw new RpcException(le.getCode(), "Failed to invoke the method "
                 + methodName + " in the service " + getInterface().getName()
                 + ". Tried " + len + " times of the providers " + providers
@@ -121,6 +134,7 @@ public class FailoverClusterInvoker<T> extends AbstractClusterInvoker<T> {
     }
 
     private int calculateInvokeTimes(String methodName) {
+        // 获取重试次数，如果没有设置，就是用默认2+1  加1 操作是本身要调用一次，然后如果失败了 再重试调用1次
         // 获取xml中retries属性值，然后为其加1
         int len = getUrl().getMethodParameter(methodName, RETRIES_KEY, DEFAULT_RETRIES) + 1;
 

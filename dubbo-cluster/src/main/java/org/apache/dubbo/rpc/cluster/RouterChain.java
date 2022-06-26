@@ -16,6 +16,19 @@
  */
 package org.apache.dubbo.rpc.cluster;
 
+import static org.apache.dubbo.rpc.cluster.Constants.ROUTER_KEY;
+import static org.apache.dubbo.rpc.cluster.Constants.STATE_ROUTER_KEY;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
+
 import org.apache.dubbo.common.URL;
 import org.apache.dubbo.common.Version;
 import org.apache.dubbo.common.extension.ExtensionLoader;
@@ -32,19 +45,6 @@ import org.apache.dubbo.rpc.cluster.router.state.BitList;
 import org.apache.dubbo.rpc.cluster.router.state.RouterCache;
 import org.apache.dubbo.rpc.cluster.router.state.StateRouter;
 import org.apache.dubbo.rpc.cluster.router.state.StateRouterFactory;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
-
-import static org.apache.dubbo.rpc.cluster.Constants.ROUTER_KEY;
-import static org.apache.dubbo.rpc.cluster.Constants.STATE_ROUTER_KEY;
 
 /**
  * Router chain
@@ -181,6 +181,7 @@ public class RouterChain<T> {
                 + " using the dubbo version " + Version.getVersion()
                 + ".");
         }
+        // 获取属性invokers集合值，这个是本地缓存的invoker集合
         BitList<Invoker<T>> finalBitListInvokers = new BitList<>(invokers, false);
         // 处理状态路由
         for (StateRouter stateRouter : stateRouters) {
