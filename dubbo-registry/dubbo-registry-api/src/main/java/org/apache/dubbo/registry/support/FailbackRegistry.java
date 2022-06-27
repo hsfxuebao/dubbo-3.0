@@ -361,6 +361,7 @@ public abstract class FailbackRegistry extends AbstractRegistry {
             throw new IllegalArgumentException("notify listener == null");
         }
         try {
+            // todo
             doNotify(url, listener, urls);
         } catch (Exception t) {
             // Record a failed registration request to a failed list

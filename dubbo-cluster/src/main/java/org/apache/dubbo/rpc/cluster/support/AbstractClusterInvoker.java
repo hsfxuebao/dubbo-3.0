@@ -337,6 +337,7 @@ public abstract class AbstractClusterInvoker<T> implements ClusterInvoker<T> {
         setContext(invoker);
         Result result;
         try {
+            // todo
             result = invoker.invoke(invocation);
         } finally {
             clearContext(invoker);

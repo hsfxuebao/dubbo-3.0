@@ -16,6 +16,11 @@
  */
 package org.apache.dubbo.remoting.exchange.support.header;
 
+import static org.apache.dubbo.common.constants.CommonConstants.READONLY_EVENT;
+
+import java.net.InetSocketAddress;
+import java.util.concurrent.CompletionStage;
+
 import org.apache.dubbo.common.URL;
 import org.apache.dubbo.common.logger.Logger;
 import org.apache.dubbo.common.logger.LoggerFactory;
@@ -33,11 +38,6 @@ import org.apache.dubbo.remoting.exchange.Response;
 import org.apache.dubbo.remoting.exchange.support.DefaultFuture;
 import org.apache.dubbo.remoting.transport.ChannelHandlerDelegate;
 
-import java.net.InetSocketAddress;
-import java.util.concurrent.CompletionStage;
-
-import static org.apache.dubbo.common.constants.CommonConstants.READONLY_EVENT;
-
 
 /**
  * ExchangeReceiver
@@ -54,8 +54,10 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
         }
         this.handler = handler;
     }
-
+    // 处理响应
     static void handleResponse(Channel channel, Response response) throws RemotingException {
+
+        // 不为null,也不是心跳
         if (response != null && !response.isHeartbeat()) {
             DefaultFuture.received(channel, response);
         }

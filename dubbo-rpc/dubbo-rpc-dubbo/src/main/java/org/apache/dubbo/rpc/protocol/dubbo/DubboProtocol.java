@@ -489,8 +489,9 @@ public class DubboProtocol extends AbstractProtocol {
      * @param connectNum connectNum must be greater than or equal to 1
      */
     @SuppressWarnings("unchecked")
+    // 获取共享连接
     private List<ReferenceCountExchangeClient> getSharedClient(URL url, int connectNum) {
-        // key为consumer的ip:服务协议port
+        // key为提供者的ip:服务协议port
         String key = url.getAddress();
 
         // 从缓存中获取clients

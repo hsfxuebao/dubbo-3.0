@@ -329,6 +329,7 @@ public class RegistryDirectory<T> extends DynamicDirectory<T> {
      * @param urls
      * @return invokers
      */
+    // 将url转成invoker
     private Map<URL, Invoker<T>> toInvokers(List<URL> urls) {
         // ------------------- 以下是对urls的各种检测 -------------------------
         Map<URL, Invoker<T>> newUrlInvokerMap = new ConcurrentHashMap<>();

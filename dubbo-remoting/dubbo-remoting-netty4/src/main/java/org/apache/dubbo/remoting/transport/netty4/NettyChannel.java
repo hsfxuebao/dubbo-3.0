@@ -16,25 +16,20 @@
  */
 package org.apache.dubbo.remoting.transport.netty4;
 
-import org.apache.dubbo.common.URL;
-import org.apache.dubbo.common.logger.Logger;
-import org.apache.dubbo.common.logger.LoggerFactory;
-import org.apache.dubbo.remoting.ChannelHandler;
-import org.apache.dubbo.remoting.RemotingException;
-import org.apache.dubbo.remoting.transport.AbstractChannel;
-import org.apache.dubbo.remoting.utils.PayloadDropper;
-
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
-
 import java.net.InetSocketAddress;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static org.apache.dubbo.common.constants.CommonConstants.DEFAULT_TIMEOUT;
-import static org.apache.dubbo.common.constants.CommonConstants.TIMEOUT_KEY;
+import org.apache.dubbo.common.URL;
+import org.apache.dubbo.common.logger.Logger;
+import org.apache.dubbo.common.logger.LoggerFactory;
+import org.apache.dubbo.remoting.ChannelHandler;
+import org.apache.dubbo.remoting.RemotingException;
+import org.apache.dubbo.remoting.transport.AbstractChannel;
+
+import io.netty.channel.Channel;
 
 /**
  * NettyChannel maintains the cache of channel.
@@ -151,34 +146,6 @@ final class NettyChannel extends AbstractChannel {
      * @param sent    whether to ack async-sent
      * @throws RemotingException throw RemotingException if wait until timeout or any exception thrown by method body that surrounded by try-catch.
      */
-    @Override
-    public void send(Object message, boolean sent) throws RemotingException {
-        // whether the channel is closed
-        super.send(message, sent);
-
-        boolean success = true;
-        int timeout = 0;
-        try {
-            ChannelFuture future = channel.writeAndFlush(message);  // 终于找到了
-            if (sent) {
-                // wait timeout ms
-                timeout = getUrl().getPositiveParameter(TIMEOUT_KEY, DEFAULT_TIMEOUT);
-                success = future.await(timeout);
-            }
-            Throwable cause = future.cause();
-            if (cause != null) {
-                throw cause;
-            }
-        } catch (Throwable e) {
-            removeChannelIfDisconnected(channel);
-            throw new RemotingException(this, "Failed to send message " + PayloadDropper.getRequestWithoutData(message) + " to " + getRemoteAddress() + ", cause: " + e.getMessage(), e);
-        }
-        if (!success) {
-            throw new RemotingException(this, "Failed to send message " + PayloadDropper.getRequestWithoutData(message) + " to " + getRemoteAddress()
-                    + "in timeout(" + timeout + "ms) limit");
-        }
-    }
-
     @Override
     public void close() {
         try {
