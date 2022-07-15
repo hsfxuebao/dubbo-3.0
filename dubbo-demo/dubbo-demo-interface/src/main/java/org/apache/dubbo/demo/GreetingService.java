@@ -21,4 +21,5 @@ package org.apache.dubbo.demo;
  */
 public interface GreetingService {
     String hello();
+//    String hello1(String name, String value, int age);
 }

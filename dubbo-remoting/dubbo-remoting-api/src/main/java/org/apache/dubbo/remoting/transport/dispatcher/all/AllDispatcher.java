@@ -25,8 +25,10 @@ import org.apache.dubbo.remoting.Dispatcher;
  */
 public class AllDispatcher implements Dispatcher {
 
+    // 线程模型的名称
     public static final String NAME = "all";
 
+    // 扩展接口具体实现
     @Override
     public ChannelHandler dispatch(ChannelHandler handler, URL url) {
         return new AllChannelHandler(handler, url);

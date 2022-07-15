@@ -16,12 +16,6 @@
  */
 package org.apache.dubbo.common.bytecode;
 
-import org.apache.dubbo.common.utils.ClassUtils;
-import org.apache.dubbo.common.utils.ReflectUtils;
-
-import javassist.ClassPool;
-import javassist.CtMethod;
-
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -36,6 +30,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
+
+import org.apache.dubbo.common.utils.ClassUtils;
+import org.apache.dubbo.common.utils.ReflectUtils;
+
+import javassist.ClassPool;
+import javassist.CtMethod;
 
 /**
  * Wrapper.
@@ -272,7 +272,7 @@ public abstract class Wrapper {
         cc.addMethod(c1.toString());
         cc.addMethod(c2.toString());
         cc.addMethod(c3.toString());
-
+        System.out.println(cc);
         try {
             Class<?> wc = cc.toClass();
             // setup static field.
@@ -284,6 +284,7 @@ public abstract class Wrapper {
             for (Method m : ms.values()) {
                 wc.getField("mts" + ix++).set(null, m.getParameterTypes());
             }
+
             return (Wrapper) wc.getDeclaredConstructor().newInstance();
         } catch (RuntimeException e) {
             throw e;

@@ -38,5 +38,4 @@
 
     <!--<dubbo:reference protocol="rest" version="1.0.0" id="restDemoService" check="false"-->
     <!--                 interface="org.apache.dubbo.demo.RestDemoService"/>-->
-
 </beans>

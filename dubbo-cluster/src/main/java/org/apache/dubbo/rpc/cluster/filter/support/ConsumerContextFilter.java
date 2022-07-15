@@ -16,6 +16,13 @@
  */
 package org.apache.dubbo.rpc.cluster.filter.support;
 
+import static org.apache.dubbo.common.constants.CommonConstants.CONSUMER;
+import static org.apache.dubbo.common.constants.CommonConstants.REMOTE_APPLICATION_KEY;
+import static org.apache.dubbo.common.constants.CommonConstants.TIME_COUNTDOWN_KEY;
+
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.dubbo.common.extension.Activate;
 import org.apache.dubbo.common.extension.ExtensionLoader;
 import org.apache.dubbo.common.utils.CollectionUtils;
@@ -31,13 +38,6 @@ import org.apache.dubbo.rpc.RpcException;
 import org.apache.dubbo.rpc.RpcInvocation;
 import org.apache.dubbo.rpc.TimeoutCountDown;
 import org.apache.dubbo.rpc.cluster.filter.ClusterFilter;
-
-import java.util.Map;
-import java.util.Set;
-
-import static org.apache.dubbo.common.constants.CommonConstants.CONSUMER;
-import static org.apache.dubbo.common.constants.CommonConstants.REMOTE_APPLICATION_KEY;
-import static org.apache.dubbo.common.constants.CommonConstants.TIME_COUNTDOWN_KEY;
 
 /**
  * ConsumerContextFilter set current RpcContext with invoker,invocation, local host, remote host and port
@@ -101,6 +101,7 @@ public class ConsumerContextFilter implements ClusterFilter, ClusterFilter.Liste
             return invoker.invoke(invocation);
         } finally {
             RpcContext.removeServiceContext();
+            // 清除context里面的东西
             RpcContext.removeClientAttachment();
         }
     }
@@ -108,6 +109,7 @@ public class ConsumerContextFilter implements ClusterFilter, ClusterFilter.Liste
     @Override
     public void onResponse(Result appResponse, Invoker<?> invoker, Invocation invocation) {
         // pass attachments to result
+        // 将响应结果中的attachments 设置到serverContext中
         RpcContext.getServerContext().setObjectAttachments(appResponse.getObjectAttachments());
     }
 

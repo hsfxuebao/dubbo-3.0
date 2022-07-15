@@ -16,10 +16,12 @@
  */
 package org.apache.dubbo.rpc;
 
-import org.apache.dubbo.common.URL;
-import org.apache.dubbo.common.utils.CollectionUtils;
-import org.apache.dubbo.common.utils.NetUtils;
-import org.apache.dubbo.common.utils.StringUtils;
+import static org.apache.dubbo.common.constants.CommonConstants.CONSUMER_SIDE;
+import static org.apache.dubbo.common.constants.CommonConstants.DUBBO;
+import static org.apache.dubbo.common.constants.CommonConstants.PROTOCOL_KEY;
+import static org.apache.dubbo.common.constants.CommonConstants.PROVIDER_SIDE;
+import static org.apache.dubbo.rpc.Constants.ASYNC_KEY;
+import static org.apache.dubbo.rpc.Constants.RETURN_KEY;
 
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
@@ -29,12 +31,10 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 
-import static org.apache.dubbo.common.constants.CommonConstants.CONSUMER_SIDE;
-import static org.apache.dubbo.common.constants.CommonConstants.DUBBO;
-import static org.apache.dubbo.common.constants.CommonConstants.PROTOCOL_KEY;
-import static org.apache.dubbo.common.constants.CommonConstants.PROVIDER_SIDE;
-import static org.apache.dubbo.rpc.Constants.ASYNC_KEY;
-import static org.apache.dubbo.rpc.Constants.RETURN_KEY;
+import org.apache.dubbo.common.URL;
+import org.apache.dubbo.common.utils.CollectionUtils;
+import org.apache.dubbo.common.utils.NetUtils;
+import org.apache.dubbo.common.utils.StringUtils;
 
 public class RpcServiceContext extends RpcContext {
 
@@ -45,24 +45,24 @@ public class RpcServiceContext extends RpcContext {
 
     private URL url;
 
-    private String methodName;
+    private String methodName;  // 调用方法名
 
-    private Class<?>[] parameterTypes;
+    private Class<?>[] parameterTypes;  // 参数类型
 
-    private Object[] arguments;
+    private Object[] arguments; // 参数
 
-    private InetSocketAddress localAddress;
+    private InetSocketAddress localAddress; // 本地地址
 
-    private InetSocketAddress remoteAddress;
+    private InetSocketAddress remoteAddress;    // 远端地址
 
     private String remoteApplicationName;
 
     @Deprecated
-    private List<Invoker<?>> invokers;
+    private List<Invoker<?>> invokers; // 这个一般服务调用者端用到，存储服务提供者invoker们
     @Deprecated
     private Invoker<?> invoker;
     @Deprecated
-    private Invocation invocation;
+    private Invocation invocation; // 调用信息
 
     // now we don't use the 'values' map to hold these objects
     // we want these objects to be as generic as possible

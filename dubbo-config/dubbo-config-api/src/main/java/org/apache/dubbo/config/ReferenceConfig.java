@@ -268,6 +268,7 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
         map.put(SIDE_KEY, CONSUMER_SIDE);
 
         ReferenceConfigBase.appendRuntimeParameters(map);
+        // 如果泛化参数 为true，就将interfaceClass 设置成
         if (!ProtocolUtils.isGeneric(generic)) {
             String revision = Version.getVersion(interfaceClass, version);
             if (revision != null && revision.length() > 0) {
@@ -481,6 +482,7 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
         if (getGeneric() == null && getConsumer() != null) {
             setGeneric(getConsumer().getGeneric());
         }
+        // 如果泛化参数为true,将interfaceClass设置成GenericService.class
         if (ProtocolUtils.isGeneric(generic)) {
             interfaceClass = GenericService.class;
         } else {

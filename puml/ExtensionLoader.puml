@@ -1,0 +1,43 @@
+@startuml
+participant ExtensionLoader order 10
+
+
+ExtensionLoader -> ExtensionLoader : getExtensionLoader
+activate ExtensionLoader
+deactivate ExtensionLoader
+
+ExtensionLoader -> ExtensionLoader :getExtension()
+activate ExtensionLoader
+
+    ExtensionLoader -> ExtensionLoader :getExtension(name, true)
+    activate ExtensionLoader
+        ExtensionLoader -> ExtensionLoader : createExtension(name, wrap)
+        activate ExtensionLoader
+            ExtensionLoader -> ExtensionLoader : getExtensionClasses()
+            activate ExtensionLoader
+            ExtensionLoader -> ExtensionLoader : loadExtensionClasses()
+            activate ExtensionLoader
+            ExtensionLoader -> ExtensionLoader : loadDirectory()
+            activate ExtensionLoader
+            ExtensionLoader -> ExtensionLoader : loadResource()
+            activate ExtensionLoader
+            ExtensionLoader -> ExtensionLoader :loadClass()
+            deactivate ExtensionLoader
+            deactivate ExtensionLoader
+            deactivate ExtensionLoader
+            deactivate ExtensionLoader
+            ExtensionLoader -> ExtensionLoader : injectExtension()
+            alt loop wrapperClasses
+            ExtensionLoader -> ExtensionLoader :injectExtension()
+            activate ExtensionLoader
+            deactivate ExtensionLoader
+            end
+        deactivate ExtensionLoader
+    deactivate ExtensionLoader
+
+deactivate ExtensionLoader
+
+
+
+
+@enduml

@@ -25,6 +25,7 @@ import static org.apache.dubbo.rpc.cluster.Constants.DEFAULT_CLUSTER_STICKY;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.dubbo.common.URL;
@@ -40,6 +41,7 @@ import org.apache.dubbo.rpc.Invoker;
 import org.apache.dubbo.rpc.Result;
 import org.apache.dubbo.rpc.RpcContext;
 import org.apache.dubbo.rpc.RpcException;
+import org.apache.dubbo.rpc.RpcInvocation;
 import org.apache.dubbo.rpc.cluster.ClusterInvoker;
 import org.apache.dubbo.rpc.cluster.Directory;
 import org.apache.dubbo.rpc.cluster.LoadBalance;
@@ -294,10 +296,10 @@ public abstract class AbstractClusterInvoker<T> implements ClusterInvoker<T> {
         checkWhetherDestroyed();
 
         // binding attachments into invocation.
-//        Map<String, Object> contextAttachments = RpcContext.getClientAttachment().getObjectAttachments();
-//        if (contextAttachments != null && contextAttachments.size() != 0) {
-//            ((RpcInvocation) invocation).addObjectAttachmentsIfAbsent(contextAttachments);
-//        }
+        Map<String, Object> contextAttachments = RpcContext.getClientAttachment().getObjectAttachments();
+        if (contextAttachments != null && contextAttachments.size() != 0) {
+            ((RpcInvocation) invocation).addObjectAttachmentsIfAbsent(contextAttachments);
+        }
 
         // 通过路由策略，将不符合路由规则的invoker过滤掉，获取所有提供者的集合
         List<Invoker<T>> invokers = list(invocation);

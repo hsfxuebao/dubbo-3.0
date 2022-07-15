@@ -16,6 +16,9 @@
  */
 package org.apache.dubbo.remoting.transport.dispatcher.execution;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.RejectedExecutionException;
+
 import org.apache.dubbo.common.URL;
 import org.apache.dubbo.common.threadpool.ThreadlessExecutor;
 import org.apache.dubbo.remoting.Channel;
@@ -26,9 +29,6 @@ import org.apache.dubbo.remoting.exchange.Request;
 import org.apache.dubbo.remoting.transport.dispatcher.ChannelEventRunnable;
 import org.apache.dubbo.remoting.transport.dispatcher.ChannelEventRunnable.ChannelState;
 import org.apache.dubbo.remoting.transport.dispatcher.WrappedChannelHandler;
-
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.RejectedExecutionException;
 
 /**
  * Only request message will be dispatched to thread pool. Other messages like response, connect, disconnect,
@@ -44,6 +44,7 @@ public class ExecutionChannelHandler extends WrappedChannelHandler {
     public void received(Channel channel, Object message) throws RemotingException {
         ExecutorService executor = getPreferredExecutorService(message);
 
+        // 只有把请求类消息派发到业务线程池处理
         if (message instanceof Request) {
             try {
                 executor.execute(new ChannelEventRunnable(channel, handler, ChannelState.RECEIVED, message));
@@ -59,6 +60,7 @@ public class ExecutionChannelHandler extends WrappedChannelHandler {
         } else if (executor instanceof ThreadlessExecutor) {
             executor.execute(new ChannelEventRunnable(channel, handler, ChannelState.RECEIVED, message));
         } else {
+            // 但是响应和其他连接事件，断开事件，心跳事件等消息直接在I/O线程上执行
             handler.received(channel, message);
         }
     }

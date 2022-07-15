@@ -16,13 +16,13 @@
  */
 package org.apache.dubbo.rpc;
 
-import org.apache.dubbo.common.Experimental;
-
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.dubbo.common.Experimental;
+
 public class RpcContextAttachment extends RpcContext{
-    protected final Map<String, Object> attachments = new HashMap<>();
+    protected final Map<String, Object> attachments = new HashMap<>();   // 附加信息，kv形式
     private final Map<String, Object> values = new HashMap<String, Object>();
 
     protected RpcContextAttachment() {

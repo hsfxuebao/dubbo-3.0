@@ -16,6 +16,16 @@
  */
 package org.apache.dubbo.rpc.filter;
 
+import static org.apache.dubbo.common.constants.CommonConstants.$INVOKE;
+import static org.apache.dubbo.common.constants.CommonConstants.$INVOKE_ASYNC;
+import static org.apache.dubbo.common.constants.CommonConstants.GENERIC_PARAMETER_DESC;
+import static org.apache.dubbo.rpc.Constants.GENERIC_KEY;
+
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.Type;
+
 import org.apache.dubbo.common.beanutil.JavaBeanAccessor;
 import org.apache.dubbo.common.beanutil.JavaBeanDescriptor;
 import org.apache.dubbo.common.beanutil.JavaBeanSerializeUtil;
@@ -36,16 +46,6 @@ import org.apache.dubbo.rpc.service.GenericService;
 import org.apache.dubbo.rpc.support.ProtocolUtils;
 import org.apache.dubbo.rpc.support.RpcUtils;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.lang.reflect.Type;
-
-import static org.apache.dubbo.common.constants.CommonConstants.$INVOKE;
-import static org.apache.dubbo.common.constants.CommonConstants.$INVOKE_ASYNC;
-import static org.apache.dubbo.common.constants.CommonConstants.GENERIC_PARAMETER_DESC;
-import static org.apache.dubbo.rpc.Constants.GENERIC_KEY;
-
 /**
  * GenericImplInvokerFilter
  */
@@ -60,7 +60,9 @@ public class GenericImplFilter implements Filter, Filter.Listener {
 
     @Override
     public Result invoke(Invoker<?> invoker, Invocation invocation) throws RpcException {
+        // 是否是泛化调用
         String generic = invoker.getUrl().getParameter(GENERIC_KEY);
+
         // calling a generic impl service
         if (isCallingGenericImpl(generic, invocation)) {
             RpcInvocation invocation2 = new RpcInvocation(invocation);
@@ -70,11 +72,14 @@ public class GenericImplFilter implements Filter, Filter.Listener {
              * See {@link RpcUtils#sieveUnnecessaryAttachments(Invocation)}
              */
             invocation2.put(GENERIC_IMPL_MARKER, true);
-
+            //方法名
             String methodName = invocation2.getMethodName();
+            // 参数类型们
             Class<?>[] parameterTypes = invocation2.getParameterTypes();
+            // 具体参数
             Object[] arguments = invocation2.getArguments();
 
+            // 将参数类型class 们转成 string类型
             String[] types = new String[parameterTypes.length];
             for (int i = 0; i < parameterTypes.length; i++) {
                 types[i] = ReflectUtils.getName(parameterTypes[i]);
@@ -83,13 +88,16 @@ public class GenericImplFilter implements Filter, Filter.Listener {
             Object[] args;
             if (ProtocolUtils.isBeanGenericSerialization(generic)) {
                 args = new Object[arguments.length];
+
                 for (int i = 0; i < arguments.length; i++) {
+                    // 进行序列化
                     args[i] = JavaBeanSerializeUtil.serialize(arguments[i], JavaBeanAccessor.METHOD);
                 }
             } else {
                 args = PojoUtils.generalize(arguments);
             }
 
+            // 这里封装成 $invoke的 形式，就是封装成 跟调用 GenericService接的 $invoke 方法一样
             if (RpcUtils.isReturnTypeFuture(invocation)) {
                 invocation2.setMethodName($INVOKE_ASYNC);
             } else {
@@ -100,7 +108,9 @@ public class GenericImplFilter implements Filter, Filter.Listener {
             invocation2.setArguments(new Object[]{methodName, types, args});
             return invoker.invoke(invocation2);
         }
+        // ----------------------------------------------
         // making a generic call to a normal service
+        // 方法名=$invoke
         else if (isMakingGenericCall(generic, invocation)) {
 
             Object[] args = (Object[]) invocation.getArguments()[2];
@@ -118,7 +128,7 @@ public class GenericImplFilter implements Filter, Filter.Listener {
                     }
                 }
             }
-
+            // 设置generic=true
             invocation.setAttachment(
                     GENERIC_KEY, invoker.getUrl().getParameter(GENERIC_KEY));
         }
@@ -136,9 +146,12 @@ public class GenericImplFilter implements Filter, Filter.Listener {
         Class<?>[] parameterTypes = invocation.getParameterTypes();
         Object genericImplMarker = invocation.get(GENERIC_IMPL_MARKER);
         if (genericImplMarker != null && (boolean) invocation.get(GENERIC_IMPL_MARKER)) {
+            // 没有异常
             if (!appResponse.hasException()) {
+                // 获取结果值
                 Object value = appResponse.getValue();
                 try {
+                    // 获取原先调用的那个method
                     Class<?> invokerInterface = invoker.getInterface();
                     if (!$INVOKE.equals(methodName) && !$INVOKE_ASYNC.equals(methodName)
                             && invokerInterface.isAssignableFrom(GenericService.class)) {
@@ -156,6 +169,7 @@ public class GenericImplFilter implements Filter, Filter.Listener {
                         if (value == null) {
                             appResponse.setValue(value);
                         } else if (value instanceof JavaBeanDescriptor) {
+                            // 需要反序列化
                             appResponse.setValue(JavaBeanSerializeUtil.deserialize((JavaBeanDescriptor) value));
                         } else {
                             throw new RpcException("The type of result value is " + value.getClass().getName() + " other than " + JavaBeanDescriptor.class.getName() + ", and the result is " + value);
@@ -214,7 +228,9 @@ public class GenericImplFilter implements Filter, Filter.Listener {
     }
 
     private boolean isCallingGenericImpl(String generic, Invocation invocation) {
+        // 是泛化调用
         return ProtocolUtils.isGeneric(generic)
+               // 这里这个方法名不是$invoke
                 && (!$INVOKE.equals(invocation.getMethodName()) && !$INVOKE_ASYNC.equals(invocation.getMethodName()))
                 && invocation instanceof RpcInvocation;
     }

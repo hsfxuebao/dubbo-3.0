@@ -16,6 +16,8 @@
  */
 package org.apache.dubbo.rpc.filter;
 
+import static org.apache.dubbo.rpc.Constants.$ECHO;
+
 import org.apache.dubbo.common.constants.CommonConstants;
 import org.apache.dubbo.common.extension.Activate;
 import org.apache.dubbo.rpc.AsyncRpcResult;
@@ -25,16 +27,16 @@ import org.apache.dubbo.rpc.Invoker;
 import org.apache.dubbo.rpc.Result;
 import org.apache.dubbo.rpc.RpcException;
 
-import static org.apache.dubbo.rpc.Constants.$ECHO;
-
 /**
  * Dubbo provided default Echo echo service, which is available for all dubbo provider service interface.
+ * 处理$echo  回声测试
  */
 @Activate(group = CommonConstants.PROVIDER, order = -110000)
 public class EchoFilter implements Filter {
 
     @Override
     public Result invoke(Invoker<?> invoker, Invocation inv) throws RpcException {
+        // 方法名是$echo 的时候，并且参数是一个，然后就将传过来的参数返回去
         if (inv.getMethodName().equals($ECHO) && inv.getArguments() != null && inv.getArguments().length == 1) {
             return AsyncRpcResult.newDefaultAsyncResult(inv.getArguments()[0], inv);
         }

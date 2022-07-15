@@ -16,6 +16,9 @@
  */
 package org.apache.dubbo.remoting.transport.dispatcher.all;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.RejectedExecutionException;
+
 import org.apache.dubbo.common.URL;
 import org.apache.dubbo.remoting.Channel;
 import org.apache.dubbo.remoting.ChannelHandler;
@@ -26,15 +29,13 @@ import org.apache.dubbo.remoting.transport.dispatcher.ChannelEventRunnable;
 import org.apache.dubbo.remoting.transport.dispatcher.ChannelEventRunnable.ChannelState;
 import org.apache.dubbo.remoting.transport.dispatcher.WrappedChannelHandler;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.RejectedExecutionException;
-
 public class AllChannelHandler extends WrappedChannelHandler {
 
     public AllChannelHandler(ChannelHandler handler, URL url) {
         super(handler, url);
     }
 
+    // 连接完成事件，交给业务线程池处理
     @Override
     public void connected(Channel channel) throws RemotingException {
         ExecutorService executor = getExecutorService();
@@ -45,6 +46,7 @@ public class AllChannelHandler extends WrappedChannelHandler {
         }
     }
 
+    // 连接断开事件，交给业务线程池处理
     @Override
     public void disconnected(Channel channel) throws RemotingException {
         ExecutorService executor = getExecutorService();
@@ -55,7 +57,7 @@ public class AllChannelHandler extends WrappedChannelHandler {
         }
     }
 
-    // 当前类称为请求分发器Dispatcher
+    // 请求响应事件，交给业务线程池处理，当为请求分发器Dispatcher
     @Override
     public void received(Channel channel, Object message) throws RemotingException {
         // 线程池
@@ -73,6 +75,7 @@ public class AllChannelHandler extends WrappedChannelHandler {
         }
     }
 
+    // 异常处理事件，交给业务线程池处理
     @Override
     public void caught(Channel channel, Throwable exception) throws RemotingException {
         ExecutorService executor = getExecutorService();

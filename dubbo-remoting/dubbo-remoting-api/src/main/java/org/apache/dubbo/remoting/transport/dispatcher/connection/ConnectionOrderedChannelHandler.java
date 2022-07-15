@@ -16,6 +16,18 @@
  */
 package org.apache.dubbo.remoting.transport.dispatcher.connection;
 
+import static org.apache.dubbo.common.constants.CommonConstants.DEFAULT_THREAD_NAME;
+import static org.apache.dubbo.common.constants.CommonConstants.THREAD_NAME_KEY;
+import static org.apache.dubbo.remoting.Constants.CONNECT_QUEUE_CAPACITY;
+import static org.apache.dubbo.remoting.Constants.CONNECT_QUEUE_WARNING_SIZE;
+import static org.apache.dubbo.remoting.Constants.DEFAULT_CONNECT_QUEUE_WARNING_SIZE;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
 import org.apache.dubbo.common.URL;
 import org.apache.dubbo.common.threadpool.support.AbortPolicyWithReport;
 import org.apache.dubbo.common.utils.NamedThreadFactory;
@@ -28,35 +40,27 @@ import org.apache.dubbo.remoting.transport.dispatcher.ChannelEventRunnable;
 import org.apache.dubbo.remoting.transport.dispatcher.ChannelEventRunnable.ChannelState;
 import org.apache.dubbo.remoting.transport.dispatcher.WrappedChannelHandler;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-
-import static org.apache.dubbo.common.constants.CommonConstants.THREAD_NAME_KEY;
-import static org.apache.dubbo.common.constants.CommonConstants.DEFAULT_THREAD_NAME;
-import static org.apache.dubbo.remoting.Constants.CONNECT_QUEUE_CAPACITY;
-import static org.apache.dubbo.remoting.Constants.CONNECT_QUEUE_WARNING_SIZE;
-import static org.apache.dubbo.remoting.Constants.DEFAULT_CONNECT_QUEUE_WARNING_SIZE;
-
 public class ConnectionOrderedChannelHandler extends WrappedChannelHandler {
 
     protected final ThreadPoolExecutor connectionExecutor;
     private final int queuewarninglimit;
 
+    // 构造函数
     public ConnectionOrderedChannelHandler(ChannelHandler handler, URL url) {
         super(handler, url);
         String threadName = url.getParameter(THREAD_NAME_KEY, DEFAULT_THREAD_NAME);
+        // 创建线程池
         connectionExecutor = new ThreadPoolExecutor(1, 1,
                 0L, TimeUnit.MILLISECONDS,
                 new LinkedBlockingQueue<Runnable>(url.getPositiveParameter(CONNECT_QUEUE_CAPACITY, Integer.MAX_VALUE)),
                 new NamedThreadFactory(threadName, true),
                 new AbortPolicyWithReport(threadName, url)
         );  // FIXME There's no place to release connectionExecutor!
+        // 线程池队列元素限制警告
         queuewarninglimit = url.getParameter(CONNECT_QUEUE_WARNING_SIZE, DEFAULT_CONNECT_QUEUE_WARNING_SIZE);
     }
 
+    // 连接建立事件
     @Override
     public void connected(Channel channel) throws RemotingException {
         try {
@@ -67,6 +71,7 @@ public class ConnectionOrderedChannelHandler extends WrappedChannelHandler {
         }
     }
 
+    // 连接断开事件
     @Override
     public void disconnected(Channel channel) throws RemotingException {
         try {
@@ -77,6 +82,7 @@ public class ConnectionOrderedChannelHandler extends WrappedChannelHandler {
         }
     }
 
+    // 请求响应事件
     @Override
     public void received(Channel channel, Object message) throws RemotingException {
         ExecutorService executor = getPreferredExecutorService(message);
@@ -91,6 +97,7 @@ public class ConnectionOrderedChannelHandler extends WrappedChannelHandler {
         }
     }
 
+    // 异常事件
     @Override
     public void caught(Channel channel, Throwable exception) throws RemotingException {
         ExecutorService executor = getExecutorService();
@@ -101,6 +108,7 @@ public class ConnectionOrderedChannelHandler extends WrappedChannelHandler {
         }
     }
 
+    // 检查线程池队列元素个数
     private void checkQueueLength() {
         if (connectionExecutor.getQueue().size() > queuewarninglimit) {
             logger.warn(new IllegalThreadStateException("connectionordered channel handler `queue size: " + connectionExecutor.getQueue().size() + " exceed the warning limit number :" + queuewarninglimit));

@@ -57,6 +57,7 @@ public class EagerThreadPoolExecutor extends ThreadPoolExecutor {
 
     @Override
     public void execute(Runnable command) {
+        // 任务为null，抛异常
         if (command == null) {
             throw new NullPointerException();
         }

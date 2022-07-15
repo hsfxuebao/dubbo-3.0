@@ -16,6 +16,19 @@
  */
 package org.apache.dubbo.rpc.filter;
 
+import static org.apache.dubbo.common.constants.CommonConstants.$INVOKE;
+import static org.apache.dubbo.common.constants.CommonConstants.$INVOKE_ASYNC;
+import static org.apache.dubbo.common.constants.CommonConstants.GENERIC_SERIALIZATION_BEAN;
+import static org.apache.dubbo.common.constants.CommonConstants.GENERIC_SERIALIZATION_GSON;
+import static org.apache.dubbo.common.constants.CommonConstants.GENERIC_SERIALIZATION_NATIVE_JAVA;
+import static org.apache.dubbo.common.constants.CommonConstants.GENERIC_SERIALIZATION_PROTOBUF;
+import static org.apache.dubbo.rpc.Constants.GENERIC_KEY;
+
+import java.io.IOException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Type;
+import java.util.stream.IntStream;
+
 import org.apache.dubbo.common.beanutil.JavaBeanAccessor;
 import org.apache.dubbo.common.beanutil.JavaBeanDescriptor;
 import org.apache.dubbo.common.beanutil.JavaBeanSerializeUtil;
@@ -47,19 +60,6 @@ import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 
-import java.io.IOException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Type;
-import java.util.stream.IntStream;
-
-import static org.apache.dubbo.common.constants.CommonConstants.$INVOKE;
-import static org.apache.dubbo.common.constants.CommonConstants.$INVOKE_ASYNC;
-import static org.apache.dubbo.common.constants.CommonConstants.GENERIC_SERIALIZATION_BEAN;
-import static org.apache.dubbo.common.constants.CommonConstants.GENERIC_SERIALIZATION_GSON;
-import static org.apache.dubbo.common.constants.CommonConstants.GENERIC_SERIALIZATION_NATIVE_JAVA;
-import static org.apache.dubbo.common.constants.CommonConstants.GENERIC_SERIALIZATION_PROTOBUF;
-import static org.apache.dubbo.rpc.Constants.GENERIC_KEY;
-
 /**
  * GenericInvokerFilter.
  */
@@ -69,16 +69,22 @@ public class GenericFilter implements Filter, Filter.Listener {
 
     @Override
     public Result invoke(Invoker<?> invoker, Invocation inv) throws RpcException {
+        // 判断是不是泛化调用
         if ((inv.getMethodName().equals($INVOKE) || inv.getMethodName().equals($INVOKE_ASYNC))
                 && inv.getArguments() != null
                 && inv.getArguments().length == 3
-                && !GenericService.class.isAssignableFrom(invoker.getInterface())) {
+                && !GenericService.class.isAssignableFrom(invoker.getInterface())) { // interface !=GenericService
+            // 获取第一个参数，也就是 方法名
             String name = ((String) inv.getArguments()[0]).trim();
+            // 参数类型
             String[] types = (String[]) inv.getArguments()[1];
+            // 参数列表
             Object[] args = (Object[]) inv.getArguments()[2];
             try {
+                // 通过 interface  ， 方法名 ，方法参数类型 获得method
                 Method method = ReflectUtils.findMethodByMethodSignature(invoker.getInterface(), name, types);
                 Class<?>[] params = method.getParameterTypes();
+                // 如果是null
                 if (args == null) {
                     args = new Object[params.length];
                 }
@@ -91,12 +97,15 @@ public class GenericFilter implements Filter, Filter.Listener {
                     throw new RpcException("GenericFilter#invoke args.length != types.length, please check your "
                             + "params");
                 }
+                //generic
                 String generic = inv.getAttachment(GENERIC_KEY);
 
+                // 从rpccontext  中获取 generic
                 if (StringUtils.isBlank(generic)) {
                     generic = RpcContext.getClientAttachment().getAttachment(GENERIC_KEY);
                 }
 
+                // generic不是null，然后=true
                 if (StringUtils.isEmpty(generic)
                         || ProtocolUtils.isDefaultGenericSerialization(generic)
                         || ProtocolUtils.isGenericReturnRawResult(generic)) {
@@ -181,6 +190,7 @@ public class GenericFilter implements Filter, Filter.Listener {
                 rpcInvocation.setInvoker(inv.getInvoker());
                 rpcInvocation.setTargetServiceUniqueName(inv.getTargetServiceUniqueName());
 
+                //进行执行
                 return invoker.invoke(rpcInvocation);
             } catch (NoSuchMethodException | ClassNotFoundException e) {
                 throw new RpcException(e.getMessage(), e);

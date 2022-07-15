@@ -16,24 +16,6 @@
  */
 package org.apache.dubbo.rpc.filter;
 
-import org.apache.dubbo.common.extension.Activate;
-import org.apache.dubbo.common.utils.StringUtils;
-import org.apache.dubbo.rpc.Filter;
-import org.apache.dubbo.rpc.Invocation;
-import org.apache.dubbo.rpc.Invoker;
-import org.apache.dubbo.rpc.Result;
-import org.apache.dubbo.rpc.RpcContext;
-import org.apache.dubbo.rpc.RpcException;
-import org.apache.dubbo.rpc.RpcInvocation;
-import org.apache.dubbo.rpc.TimeoutCountDown;
-import org.apache.dubbo.rpc.support.RpcUtils;
-
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
-
 import static org.apache.dubbo.common.constants.CommonConstants.DUBBO_VERSION_KEY;
 import static org.apache.dubbo.common.constants.CommonConstants.GROUP_KEY;
 import static org.apache.dubbo.common.constants.CommonConstants.INTERFACE_KEY;
@@ -47,6 +29,24 @@ import static org.apache.dubbo.common.constants.CommonConstants.VERSION_KEY;
 import static org.apache.dubbo.rpc.Constants.ASYNC_KEY;
 import static org.apache.dubbo.rpc.Constants.FORCE_USE_TAG;
 import static org.apache.dubbo.rpc.Constants.TOKEN_KEY;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+
+import org.apache.dubbo.common.extension.Activate;
+import org.apache.dubbo.common.utils.StringUtils;
+import org.apache.dubbo.rpc.Filter;
+import org.apache.dubbo.rpc.Invocation;
+import org.apache.dubbo.rpc.Invoker;
+import org.apache.dubbo.rpc.Result;
+import org.apache.dubbo.rpc.RpcContext;
+import org.apache.dubbo.rpc.RpcException;
+import org.apache.dubbo.rpc.RpcInvocation;
+import org.apache.dubbo.rpc.TimeoutCountDown;
+import org.apache.dubbo.rpc.support.RpcUtils;
 
 
 /**
@@ -81,6 +81,7 @@ public class ContextFilter implements Filter, Filter.Listener {
 
     @Override
     public Result invoke(Invoker<?> invoker, Invocation invocation) throws RpcException {
+        // 从invocation中获取附件参数
         Map<String, Object> attachments = invocation.getObjectAttachments();
         if (attachments != null) {
             Map<String, Object> newAttach = new HashMap<>(attachments.size());
@@ -115,10 +116,14 @@ public class ContextFilter implements Filter, Filter.Listener {
 
         // merged from dubbox
         // we may already added some attachments into RpcContext before this filter (e.g. in rest protocol)
+        //
         if (attachments != null) {
+            // 如果存在attachments
             if (context.getObjectAttachments() != null) {
+                // 将invoker里面的attachments设置到context中
                 context.getObjectAttachments().putAll(attachments);
             } else {
+                // 设置attachments
                 context.setObjectAttachments(attachments);
             }
         }
@@ -143,6 +148,7 @@ public class ContextFilter implements Filter, Filter.Listener {
     @Override
     public void onResponse(Result appResponse, Invoker<?> invoker, Invocation invocation) {
         // pass attachments to result
+        // 将serverContext中的附件参数 设置到response中
         appResponse.addObjectAttachments(RpcContext.getServerContext().getObjectAttachments());
     }
 

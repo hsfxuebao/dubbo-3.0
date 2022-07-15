@@ -16,14 +16,7 @@
  */
 package org.apache.dubbo.monitor.dubbo;
 
-import org.apache.dubbo.common.URL;
-import org.apache.dubbo.common.logger.Logger;
-import org.apache.dubbo.common.logger.LoggerFactory;
-import org.apache.dubbo.common.utils.ExecutorUtil;
-import org.apache.dubbo.common.utils.NamedThreadFactory;
-import org.apache.dubbo.monitor.Monitor;
-import org.apache.dubbo.monitor.MonitorService;
-import org.apache.dubbo.rpc.Invoker;
+import static org.apache.dubbo.common.constants.CommonConstants.DEFAULT_PROTOCOL;
 
 import java.util.List;
 import java.util.Map;
@@ -35,7 +28,14 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static org.apache.dubbo.common.constants.CommonConstants.DEFAULT_PROTOCOL;
+import org.apache.dubbo.common.URL;
+import org.apache.dubbo.common.logger.Logger;
+import org.apache.dubbo.common.logger.LoggerFactory;
+import org.apache.dubbo.common.utils.ExecutorUtil;
+import org.apache.dubbo.common.utils.NamedThreadFactory;
+import org.apache.dubbo.monitor.Monitor;
+import org.apache.dubbo.monitor.MonitorService;
+import org.apache.dubbo.rpc.Invoker;
 
 /**
  * DubboMonitor
@@ -167,8 +167,8 @@ public class DubboMonitor implements Monitor {
                 update[1] = failure;
                 update[2] = input;
                 update[3] = output;
-                update[4] = elapsed;
-                update[5] = concurrent;
+                update[4] = elapsed; // 耗时
+                update[5] = concurrent; // 当前的并发数
                 update[6] = input;
                 update[7] = output;
                 update[8] = elapsed;

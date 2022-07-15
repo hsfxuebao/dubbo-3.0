@@ -95,7 +95,7 @@ public class MockClusterInvoker<T> implements ClusterInvoker<T> {
             //no mock  远程调用
             result = this.invoker.invoke(invocation);
 
-            // 若mock属性值以force开头，则进行强制降级(无论是否有可用的invoker，都不管，直接降级)
+        // 若mock属性值以force开头，则进行强制降级(无论是否有可用的invoker，都不管，直接降级)
         } else if (value.startsWith("force")) {
             if (logger.isWarnEnabled()) {
                 logger.warn("force-mock: " + invocation.getMethodName() + " force-mock enabled , url : " + getUrl());
@@ -104,7 +104,7 @@ public class MockClusterInvoker<T> implements ClusterInvoker<T> {
             // 服务降级
             result = doMockInvoke(invocation, null);
 
-            // 其它情况：当远程调用过程发生异常时，进行降级
+        // 其它情况：当远程调用过程发生异常时，进行降级
         } else {
             //fail-mock
             try {

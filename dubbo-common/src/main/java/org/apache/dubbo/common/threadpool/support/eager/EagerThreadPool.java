@@ -17,14 +17,6 @@
 
 package org.apache.dubbo.common.threadpool.support.eager;
 
-import org.apache.dubbo.common.URL;
-import org.apache.dubbo.common.threadlocal.NamedInternalThreadFactory;
-import org.apache.dubbo.common.threadpool.ThreadPool;
-import org.apache.dubbo.common.threadpool.support.AbortPolicyWithReport;
-
-import java.util.concurrent.Executor;
-import java.util.concurrent.TimeUnit;
-
 import static org.apache.dubbo.common.constants.CommonConstants.ALIVE_KEY;
 import static org.apache.dubbo.common.constants.CommonConstants.CORE_THREADS_KEY;
 import static org.apache.dubbo.common.constants.CommonConstants.DEFAULT_ALIVE;
@@ -35,6 +27,14 @@ import static org.apache.dubbo.common.constants.CommonConstants.QUEUES_KEY;
 import static org.apache.dubbo.common.constants.CommonConstants.THREADS_KEY;
 import static org.apache.dubbo.common.constants.CommonConstants.THREAD_NAME_KEY;
 
+import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
+
+import org.apache.dubbo.common.URL;
+import org.apache.dubbo.common.threadlocal.NamedInternalThreadFactory;
+import org.apache.dubbo.common.threadpool.ThreadPool;
+import org.apache.dubbo.common.threadpool.support.AbortPolicyWithReport;
+
 /**
  * EagerThreadPool
  * When the core threads are all in busy,
@@ -44,13 +44,19 @@ public class EagerThreadPool implements ThreadPool {
 
     @Override
     public Executor getExecutor(URL url) {
+        // 线程名称
         String name = url.getParameter(THREAD_NAME_KEY, DEFAULT_THREAD_NAME);
+        // 线程池核心线程个数
         int cores = url.getParameter(CORE_THREADS_KEY, DEFAULT_CORE_THREADS);
+        // 线程池最大线程个数
         int threads = url.getParameter(THREADS_KEY, Integer.MAX_VALUE);
+        // 线程池队列大小
         int queues = url.getParameter(QUEUES_KEY, DEFAULT_QUEUES);
+        // 线程池队列线程空闲多少时间被回收
         int alive = url.getParameter(ALIVE_KEY, DEFAULT_ALIVE);
 
         // init queue and executor
+        // 初始化自定义线程池和队列
         TaskQueue<Runnable> taskQueue = new TaskQueue<Runnable>(queues <= 0 ? 1 : queues);
         EagerThreadPoolExecutor executor = new EagerThreadPoolExecutor(cores,
                 threads,

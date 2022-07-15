@@ -99,7 +99,9 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
         // find handler by message class.
         Object msg = req.getData();
         try {
+            // 调用DubboProtocol的reply方法
             CompletionStage<Object> future = handler.reply(channel, msg);  // 处理调用
+            // 等返回结果后异步调用回调
             future.whenComplete((appResult, t) -> {  // 添加监听，一旦异步操作完成，就会触发该回调
                 try {
                     if (t == null) {

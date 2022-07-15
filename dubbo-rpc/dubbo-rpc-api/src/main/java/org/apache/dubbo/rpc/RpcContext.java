@@ -16,11 +16,6 @@
  */
 package org.apache.dubbo.rpc;
 
-import org.apache.dubbo.common.Experimental;
-import org.apache.dubbo.common.URL;
-import org.apache.dubbo.common.threadlocal.InternalThreadLocal;
-import org.apache.dubbo.common.utils.StringUtils;
-
 import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.List;
@@ -28,6 +23,11 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
+
+import org.apache.dubbo.common.Experimental;
+import org.apache.dubbo.common.URL;
+import org.apache.dubbo.common.threadlocal.InternalThreadLocal;
+import org.apache.dubbo.common.utils.StringUtils;
 
 
 /**
@@ -56,6 +56,7 @@ public class RpcContext {
     /**
      * use internal thread local to improve performance
      */
+    //远端的context，也就是服务提供者的context
     private static final InternalThreadLocal<RpcContextAttachment> SERVER_LOCAL = new InternalThreadLocal<RpcContextAttachment>() {
         @Override
         protected RpcContextAttachment initialValue() {

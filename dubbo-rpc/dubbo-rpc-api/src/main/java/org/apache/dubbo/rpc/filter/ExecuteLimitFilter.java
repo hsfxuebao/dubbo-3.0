@@ -16,6 +16,8 @@
  */
 package org.apache.dubbo.rpc.filter;
 
+import static org.apache.dubbo.rpc.Constants.EXECUTES_KEY;
+
 import org.apache.dubbo.common.URL;
 import org.apache.dubbo.common.constants.CommonConstants;
 import org.apache.dubbo.common.extension.Activate;
@@ -25,8 +27,6 @@ import org.apache.dubbo.rpc.Invoker;
 import org.apache.dubbo.rpc.Result;
 import org.apache.dubbo.rpc.RpcException;
 import org.apache.dubbo.rpc.RpcStatus;
-
-import static org.apache.dubbo.rpc.Constants.EXECUTES_KEY;
 
 
 /**
@@ -41,9 +41,12 @@ public class ExecuteLimitFilter implements Filter, Filter.Listener {
 
     @Override
     public Result invoke(Invoker<?> invoker, Invocation invocation) throws RpcException {
+        // 获取URL和调用的方法名称
         URL url = invoker.getUrl();
         String methodName = invocation.getMethodName();
+        // 获取设置的executes的值（默认0）和最大可用并发数
         int max = url.getMethodParameter(methodName, EXECUTES_KEY, 0);
+        // 判断是不是超过并发限制
         if (!RpcStatus.beginCount(url, methodName, max)) {
             throw new RpcException(RpcException.LIMIT_EXCEEDED_EXCEPTION,
                     "Failed to invoke method " + invocation.getMethodName() + " in provider " +
@@ -51,6 +54,7 @@ public class ExecuteLimitFilter implements Filter, Filter.Listener {
                             "\" /> limited.");
         }
 
+        // 到这里说明激活并发数没达到限制，继续Filter链的处理，正常执行服务处理
         invocation.put(EXECUTE_LIMIT_FILTER_START_TIME, System.currentTimeMillis());
         try {
             return invoker.invoke(invocation);
@@ -65,6 +69,7 @@ public class ExecuteLimitFilter implements Filter, Filter.Listener {
 
     @Override
     public void onResponse(Result appResponse, Invoker<?> invoker, Invocation invocation) {
+        // 当前方法激活并发减去1
         RpcStatus.endCount(invoker.getUrl(), invocation.getMethodName(), getElapsed(invocation), true);
     }
 
@@ -76,6 +81,7 @@ public class ExecuteLimitFilter implements Filter, Filter.Listener {
                 return;
             }
         }
+        // 当前方法激活并发减去1
         RpcStatus.endCount(invoker.getUrl(), invocation.getMethodName(), getElapsed(invocation), false);
     }
 

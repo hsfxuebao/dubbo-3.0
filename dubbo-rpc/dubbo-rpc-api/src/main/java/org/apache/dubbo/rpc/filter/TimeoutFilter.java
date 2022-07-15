@@ -16,6 +16,10 @@
  */
 package org.apache.dubbo.rpc.filter;
 
+import static org.apache.dubbo.common.constants.CommonConstants.TIME_COUNTDOWN_KEY;
+
+import java.util.Arrays;
+
 import org.apache.dubbo.common.constants.CommonConstants;
 import org.apache.dubbo.common.extension.Activate;
 import org.apache.dubbo.common.logger.Logger;
@@ -28,10 +32,6 @@ import org.apache.dubbo.rpc.Result;
 import org.apache.dubbo.rpc.RpcContext;
 import org.apache.dubbo.rpc.RpcException;
 import org.apache.dubbo.rpc.TimeoutCountDown;
-
-import java.util.Arrays;
-
-import static org.apache.dubbo.common.constants.CommonConstants.TIME_COUNTDOWN_KEY;
 
 /**
  * Log any invocation timeout, but don't stop server from running
@@ -48,9 +48,11 @@ public class TimeoutFilter implements Filter, Filter.Listener {
 
     @Override
     public void onResponse(Result appResponse, Invoker<?> invoker, Invocation invocation) {
+        // 从attachment 中获取countdown 对象
         Object obj = RpcContext.getClientAttachment().getObjectAttachment(TIME_COUNTDOWN_KEY);
         if (obj != null) {
             TimeoutCountDown countDown = (TimeoutCountDown) obj;
+            // 判断本次响应是否超时
             if (countDown.isExpired()) {
                 ((AppResponse) appResponse).clear(); // clear response in case of timeout.
                 if (logger.isWarnEnabled()) {

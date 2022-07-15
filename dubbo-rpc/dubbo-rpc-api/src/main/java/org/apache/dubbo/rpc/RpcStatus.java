@@ -16,12 +16,12 @@
  */
 package org.apache.dubbo.rpc;
 
-import org.apache.dubbo.common.URL;
-
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+
+import org.apache.dubbo.common.URL;
 
 /**
  * URL statistics. (API, Cached, ThreadSafe)
@@ -32,21 +32,31 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class RpcStatus {
 
+
     private static final ConcurrentMap<String, RpcStatus> SERVICE_STATISTICS = new ConcurrentHashMap<String,
             RpcStatus>();
 
+    // 缓存key为接口类，value为map
     private static final ConcurrentMap<String, ConcurrentMap<String, RpcStatus>> METHOD_STATISTICS =
             new ConcurrentHashMap<String, ConcurrentMap<String, RpcStatus>>();
 
     private final ConcurrentMap<String, Object> values = new ConcurrentHashMap<String, Object>();
 
+    // 当前激活并发数
     private final AtomicInteger active = new AtomicInteger();
+    // 总调用次数
     private final AtomicLong total = new AtomicLong();
+    // 失败次数
     private final AtomicInteger failed = new AtomicInteger();
+    // 总消耗时间
     private final AtomicLong totalElapsed = new AtomicLong();
+    // 失败消耗时间
     private final AtomicLong failedElapsed = new AtomicLong();
+    // 最大消耗时间
     private final AtomicLong maxElapsed = new AtomicLong();
+    // 失败最大消耗时间
     private final AtomicLong failedMaxElapsed = new AtomicLong();
+    // 成功最大消耗时间
     private final AtomicLong succeededMaxElapsed = new AtomicLong();
 
     private RpcStatus() {
@@ -55,6 +65,7 @@ public class RpcStatus {
     /**
      * @param url
      * @return status
+     * 获取方法对应的RPCStatus
      */
     public static RpcStatus getStatus(URL url) {
         String uri = url.toIdentityString();
@@ -73,10 +84,16 @@ public class RpcStatus {
      * @param url
      * @param methodName
      * @return status
+     * 获取url对应缓存method的RpcStatus
      */
     public static RpcStatus getStatus(URL url, String methodName) {
+        // 生成IdentityString 例如：dubbo://192.168.3.33:18109/com.xuzhaocai.dubbo.provider.IHelloProviderService
         String uri = url.toIdentityString();
+
+        // 使用IdentityString  获取
+        // key是方法名，value是RpcStatus
         ConcurrentMap<String, RpcStatus> map = METHOD_STATISTICS.computeIfAbsent(uri, k -> new ConcurrentHashMap<>());
+        // 获取methodName 对应的RpcStatus
         return map.computeIfAbsent(methodName, k -> new RpcStatus());
     }
 
@@ -91,6 +108,7 @@ public class RpcStatus {
         }
     }
 
+    // 递增方法对应的并发激活数
     public static void beginCount(URL url, String methodName) {
         beginCount(url, methodName, Integer.MAX_VALUE);
     }
@@ -101,10 +119,13 @@ public class RpcStatus {
     public static boolean beginCount(URL url, String methodName, int max) {
         max = (max <= 0) ? Integer.MAX_VALUE : max;
         RpcStatus appStatus = getStatus(url);
+        // 获取方法对应的RpcStatus
         RpcStatus methodStatus = getStatus(url, methodName);
         if (methodStatus.active.get() == Integer.MAX_VALUE) {
             return false;
         }
+
+        // 原子性递增方法对应激活并发数，若超过最大限制则返回false,否则返回true
         for (int i; ; ) {
             i = methodStatus.active.get();
 
@@ -127,12 +148,14 @@ public class RpcStatus {
      * @param elapsed
      * @param succeeded
      */
+    // 原子性递减方法对应的激活并发数
     public static void endCount(URL url, String methodName, long elapsed, boolean succeeded) {
         endCount(getStatus(url), elapsed, succeeded);
         endCount(getStatus(url, methodName), elapsed, succeeded);
     }
 
     private static void endCount(RpcStatus status, long elapsed, boolean succeeded) {
+        // 原子性递减激活并发数
         status.active.decrementAndGet();
         status.total.incrementAndGet();
         status.totalElapsed.addAndGet(elapsed);

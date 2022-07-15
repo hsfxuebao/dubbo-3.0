@@ -2,6 +2,7 @@ package com.abc.test;
 
 
 import org.apache.dubbo.common.extension.ExtensionLoader;
+import org.apache.dubbo.rpc.Protocol;
 import org.junit.Test;
 
 import com.abc.dubbospi.Order;
@@ -46,5 +47,14 @@ public class OrderTest {
         Order defaultPay = loader.getExtension("true");
         System.out.println(defaultPay.way());
 
+    }
+
+    @Test
+    public void test4() {
+        ExtensionLoader<Protocol> loader = ExtensionLoader
+            .getExtensionLoader(Protocol.class);  // 获取SPI接口Protocol的extensionLoader实例
+
+        final Protocol adaptiveExtension = loader.getAdaptiveExtension();
+        System.out.println("11111");
     }
 }

@@ -16,6 +16,10 @@
  */
 package org.apache.dubbo.rpc.filter;
 
+import static org.apache.dubbo.common.constants.CommonConstants.CONSUMER;
+import static org.apache.dubbo.common.constants.CommonConstants.TIMEOUT_KEY;
+import static org.apache.dubbo.rpc.Constants.ACTIVES_KEY;
+
 import org.apache.dubbo.common.URL;
 import org.apache.dubbo.common.extension.Activate;
 import org.apache.dubbo.rpc.Filter;
@@ -24,10 +28,6 @@ import org.apache.dubbo.rpc.Invoker;
 import org.apache.dubbo.rpc.Result;
 import org.apache.dubbo.rpc.RpcException;
 import org.apache.dubbo.rpc.RpcStatus;
-
-import static org.apache.dubbo.common.constants.CommonConstants.CONSUMER;
-import static org.apache.dubbo.common.constants.CommonConstants.TIMEOUT_KEY;
-import static org.apache.dubbo.rpc.Constants.ACTIVES_KEY;
 
 /**
  * ActiveLimitFilter restrict the concurrent client invocation for a service or service's method from client side.
@@ -48,23 +48,38 @@ public class ActiveLimitFilter implements Filter, Filter.Listener {
 
     @Override
     public Result invoke(Invoker<?> invoker, Invocation invocation) throws RpcException {
+        // 获取URL和调用的方法名称
         URL url = invoker.getUrl();
         String methodName = invocation.getMethodName();
+        // 获取actives的值（默认0）和最大可用并发数
         int max = invoker.getUrl().getMethodParameter(methodName, ACTIVES_KEY, 0);
+        // 根据URL和方法名获取对应的状态对象
         final RpcStatus rpcStatus = RpcStatus.getStatus(invoker.getUrl(), invocation.getMethodName());
+
+        // -----------------------------
+
+        // 判断是不是超过并发限制
         if (!RpcStatus.beginCount(url, methodName, max)) {
+            // 获取timeout
             long timeout = invoker.getUrl().getMethodParameter(invocation.getMethodName(), TIMEOUT_KEY, 0);
+            // 开始时间
             long start = System.currentTimeMillis();
+            // 剩余时间
             long remain = timeout;
+            // 超过并发限制则阻塞当前线程的timeout时间
             synchronized (rpcStatus) {
+                // 计算
                 while (!RpcStatus.beginCount(url, methodName, max)) {
                     try {
                         rpcStatus.wait(remain);
                     } catch (InterruptedException e) {
                         // ignore
                     }
+                    // 计算消耗多长时间
                     long elapsed = System.currentTimeMillis() - start;
+                    // 剩余时间  超时时间-消耗时间
                     remain = timeout - elapsed;
+                    // 超时了还没被唤醒则抛出异常
                     if (remain <= 0) {
                         throw new RpcException(RpcException.LIMIT_EXCEEDED_EXCEPTION,
                                 "Waiting concurrent invoke timeout in client-side for service:  " +
@@ -77,20 +92,24 @@ public class ActiveLimitFilter implements Filter, Filter.Listener {
         }
 
         invocation.put(ACTIVELIMIT_FILTER_START_TIME, System.currentTimeMillis());
-
+        // 到这里说明激活并发数没达到限制，则继续Filter链的调用，正常发起远程调用
         return invoker.invoke(invocation);
     }
 
+    // 正常响应的调用方法
     @Override
     public void onResponse(Result appResponse, Invoker<?> invoker, Invocation invocation) {
         String methodName = invocation.getMethodName();
         URL url = invoker.getUrl();
         int max = invoker.getUrl().getMethodParameter(methodName, ACTIVES_KEY, 0);
 
+        // 远程调用完成后，当前激活并发数减去1
         RpcStatus.endCount(url, methodName, getElapsed(invocation), true);
+        // 通过notifyAll方法激活所有挂起线程
         notifyFinish(RpcStatus.getStatus(url, methodName), max);
     }
 
+    // 出现错误的调用方法
     @Override
     public void onError(Throwable t, Invoker<?> invoker, Invocation invocation) {
         String methodName = invocation.getMethodName();
@@ -103,7 +122,9 @@ public class ActiveLimitFilter implements Filter, Filter.Listener {
                 return;
             }
         }
+        // 远程调用完成后，当前激活并发数减去1
         RpcStatus.endCount(url, methodName, getElapsed(invocation), false);
+        // 通过notifyAll方法激活所有挂起线程
         notifyFinish(RpcStatus.getStatus(url, methodName), max);
     }
 
