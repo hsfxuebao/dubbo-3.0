@@ -16,18 +16,18 @@
  */
 package org.apache.dubbo.remoting.zookeeper;
 
-import org.apache.dubbo.common.URL;
-import org.apache.dubbo.common.config.configcenter.ConfigItem;
-import org.apache.dubbo.common.logger.Logger;
-import org.apache.dubbo.common.logger.LoggerFactory;
-import org.apache.dubbo.common.utils.ConcurrentHashSet;
-
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.Executor;
+
+import org.apache.dubbo.common.URL;
+import org.apache.dubbo.common.config.configcenter.ConfigItem;
+import org.apache.dubbo.common.logger.Logger;
+import org.apache.dubbo.common.logger.LoggerFactory;
+import org.apache.dubbo.common.utils.ConcurrentHashSet;
 
 public abstract class AbstractZookeeperClient<TargetDataListener, TargetChildListener> implements ZookeeperClient {
 
@@ -36,16 +36,20 @@ public abstract class AbstractZookeeperClient<TargetDataListener, TargetChildLis
     protected int DEFAULT_CONNECTION_TIMEOUT_MS = 5 * 1000;
     protected int DEFAULT_SESSION_TIMEOUT_MS = 60 * 1000;
 
+    // 注册中心的url
     private final URL url;
 
+    // 状态listener 列表  CopyOnWriteArraySet：线程安全
     private final Set<StateListener> stateListeners = new CopyOnWriteArraySet<StateListener>();
 
+    // 缓存着 path与listener的关系
     private final ConcurrentMap<String, ConcurrentMap<ChildListener, TargetChildListener>> childListeners =
             new ConcurrentHashMap<String, ConcurrentMap<ChildListener, TargetChildListener>>();
 
     private final ConcurrentMap<String, ConcurrentMap<DataListener, TargetDataListener>> listeners =
             new ConcurrentHashMap<String, ConcurrentMap<DataListener, TargetDataListener>>();
 
+    // 关闭标识 volatile修饰
     private volatile boolean closed = false;
 
     private final Set<String> persistentExistNodePath = new ConcurrentHashSet<>();
@@ -90,11 +94,12 @@ public abstract class AbstractZookeeperClient<TargetDataListener, TargetChildLis
         }
     }
 
+    // 添加StateListener
     @Override
     public void addStateListener(StateListener listener) {
         stateListeners.add(listener);
     }
-
+    // 移除StateListener
     @Override
     public void removeStateListener(StateListener listener) {
         stateListeners.remove(listener);
@@ -106,8 +111,11 @@ public abstract class AbstractZookeeperClient<TargetDataListener, TargetChildLis
 
     @Override
     public List<String> addChildListener(String path, final ChildListener listener) {
+        // 根据path获取 childListener 与 具体节点监听器的对应关系
         ConcurrentMap<ChildListener, TargetChildListener> listeners = childListeners.computeIfAbsent(path, k -> new ConcurrentHashMap<>());
+        // 根据childListener 获取对应的  具体节点监听器
         TargetChildListener targetListener = listeners.computeIfAbsent(listener, k -> createTargetChildListener(path, k));
+        // 进行添加
         return addTargetChildListener(path, targetListener);
     }
 
@@ -144,7 +152,7 @@ public abstract class AbstractZookeeperClient<TargetDataListener, TargetChildLis
             }
         }
     }
-
+    // 状态改变的时候， 进行通知
     protected void stateChanged(int state) {
         for (StateListener sessionListener : getSessionListeners()) {
             sessionListener.stateChanged(state);
@@ -208,8 +216,10 @@ public abstract class AbstractZookeeperClient<TargetDataListener, TargetChildLis
 
     protected abstract void doClose();
 
+    // 创建永久节点
     protected abstract void createPersistent(String path);
 
+    // 创建临时节点
     protected abstract void createEphemeral(String path);
 
     protected abstract void createPersistent(String path, String data);

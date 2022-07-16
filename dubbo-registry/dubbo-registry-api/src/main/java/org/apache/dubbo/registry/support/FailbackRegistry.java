@@ -47,24 +47,28 @@ public abstract class FailbackRegistry extends AbstractRegistry {
 
     /*  retry task map */
 
+    // 注册失败
     private final ConcurrentMap<URL, FailedRegisteredTask> failedRegistered = new ConcurrentHashMap<URL, FailedRegisteredTask>();
-
+    // 注销失败
     private final ConcurrentMap<URL, FailedUnregisteredTask> failedUnregistered = new ConcurrentHashMap<URL, FailedUnregisteredTask>();
-
+    // 订阅失败
     private final ConcurrentMap<Holder, FailedSubscribedTask> failedSubscribed = new ConcurrentHashMap<Holder, FailedSubscribedTask>();
-
+    // 取消订阅失败
     private final ConcurrentMap<Holder, FailedUnsubscribedTask> failedUnsubscribed = new ConcurrentHashMap<Holder, FailedUnsubscribedTask>();
 
     /**
      * The time in milliseconds the retryExecutor will wait
      */
+    // 重试时间间隔
     private final int retryPeriod;
 
     // Timer for failure retry, regular check if there is a request for failure, and if there is, an unlimited retry
+    // 重试线程池
     private final HashedWheelTimer retryTimer;
 
     public FailbackRegistry(URL url) {
         super(url);
+        // 重试的间隔时间 默认是5秒
         this.retryPeriod = url.getParameter(REGISTRY_RETRY_PERIOD_KEY, DEFAULT_REGISTRY_RETRY_PERIOD);
 
         // since the retry task will not be very much. 128 ticks is enough.
@@ -145,10 +149,12 @@ public abstract class FailbackRegistry extends AbstractRegistry {
 
     public void removeFailedSubscribed(URL url, NotifyListener listener) {
         Holder h = new Holder(url, listener);
+        // 移除 失败的订阅
         FailedSubscribedTask f = failedSubscribed.remove(h);
         if (f != null) {
             f.cancel();
         }
+        // 移除 失败的取消订阅
         removeFailedUnsubscribed(url, listener);
     }
 
@@ -191,13 +197,16 @@ public abstract class FailbackRegistry extends AbstractRegistry {
     }
 
 
+    // 注册，这个要注册的url就是业务url
     @Override
     public void register(URL url) {
         if (!acceptable(url)) {
             logger.info("URL " + url + " will not be registered to Registry. Registry " + url + " does not accept service of this protocol type.");
             return;
         }
+        // 检查缓存
         super.register(url);
+        // 移除失败的缓存
         removeFailedRegistered(url);
         removeFailedUnregistered(url);
         try {
@@ -221,6 +230,7 @@ public abstract class FailbackRegistry extends AbstractRegistry {
             }
 
             // Record a failed registration request to a failed list, retry regularly
+            // 将url添加到failedRegistered 中
             addFailedRegistered(url);
         }
     }
@@ -251,6 +261,7 @@ public abstract class FailbackRegistry extends AbstractRegistry {
         removeFailedUnregistered(url);
         try {
             // Sending a cancellation request to the server side
+            // todo
             doUnregister(url);
         } catch (Exception e) {
             Throwable t = e;
@@ -320,13 +331,16 @@ public abstract class FailbackRegistry extends AbstractRegistry {
             }
 
             // Record a failed registration request to a failed list, retry regularly
+            // 添加到 订阅失败中
             addFailedSubscribed(url, listener);
         }
     }
 
     @Override
     public void unsubscribe(URL url, NotifyListener listener) {
+        // 交给父类 缓存
         super.unsubscribe(url, listener);
+        // 移除 失败的订阅
         removeFailedSubscribed(url, listener);
         try {
             // Sending a canceling subscription request to the server side
@@ -376,6 +390,7 @@ public abstract class FailbackRegistry extends AbstractRegistry {
     @Override
     protected void recover() throws Exception {
         // register
+        // 获取已经注册过的
         Set<URL> recoverRegistered = new HashSet<URL>(getRegistered());
         if (!recoverRegistered.isEmpty()) {
             if (logger.isInfoEnabled()) {
@@ -385,10 +400,12 @@ public abstract class FailbackRegistry extends AbstractRegistry {
                 // remove fail registry or unRegistry task first.
                 removeFailedRegistered(url);
                 removeFailedUnregistered(url);
+                // 添加到失败注册中
                 addFailedRegistered(url);
             }
         }
         // subscribe
+        // 获取已经订阅过的
         Map<URL, Set<NotifyListener>> recoverSubscribed = new HashMap<URL, Set<NotifyListener>>(getSubscribed());
         if (!recoverSubscribed.isEmpty()) {
             if (logger.isInfoEnabled()) {
@@ -399,6 +416,7 @@ public abstract class FailbackRegistry extends AbstractRegistry {
                 for (NotifyListener listener : entry.getValue()) {
                     // First remove other tasks to ensure that addFailedSubscribed can succeed.
                     removeFailedSubscribed(url, listener);
+                    // 添加到失败订阅中
                     addFailedSubscribed(url, listener);
                 }
             }

@@ -16,6 +16,32 @@
  */
 package org.apache.dubbo.registry.support;
 
+import static org.apache.dubbo.common.URLStrParser.ENCODED_AND_MARK;
+import static org.apache.dubbo.common.URLStrParser.ENCODED_PID_KEY;
+import static org.apache.dubbo.common.URLStrParser.ENCODED_QUESTION_MARK;
+import static org.apache.dubbo.common.URLStrParser.ENCODED_TIMESTAMP_KEY;
+import static org.apache.dubbo.common.constants.CommonConstants.CACHE_CLEAR_TASK_INTERVAL;
+import static org.apache.dubbo.common.constants.CommonConstants.CACHE_CLEAR_WAITING_THRESHOLD;
+import static org.apache.dubbo.common.constants.CommonConstants.CHECK_KEY;
+import static org.apache.dubbo.common.constants.CommonConstants.DUBBO;
+import static org.apache.dubbo.common.constants.CommonConstants.PATH_SEPARATOR;
+import static org.apache.dubbo.common.constants.CommonConstants.PROTOCOL_SEPARATOR_ENCODED;
+import static org.apache.dubbo.common.constants.RegistryConstants.CATEGORY_KEY;
+import static org.apache.dubbo.common.constants.RegistryConstants.EMPTY_PROTOCOL;
+import static org.apache.dubbo.common.constants.RegistryConstants.PROVIDERS_CATEGORY;
+import static org.apache.dubbo.common.url.component.DubboServiceAddressURL.PROVIDER_FIRST_KEYS;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
+
 import org.apache.dubbo.common.URL;
 import org.apache.dubbo.common.URLBuilder;
 import org.apache.dubbo.common.URLStrParser;
@@ -32,32 +58,6 @@ import org.apache.dubbo.common.utils.CollectionUtils;
 import org.apache.dubbo.common.utils.StringUtils;
 import org.apache.dubbo.common.utils.UrlUtils;
 import org.apache.dubbo.registry.NotifyListener;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
-
-import static org.apache.dubbo.common.URLStrParser.ENCODED_AND_MARK;
-import static org.apache.dubbo.common.URLStrParser.ENCODED_PID_KEY;
-import static org.apache.dubbo.common.URLStrParser.ENCODED_QUESTION_MARK;
-import static org.apache.dubbo.common.URLStrParser.ENCODED_TIMESTAMP_KEY;
-import static org.apache.dubbo.common.constants.CommonConstants.CACHE_CLEAR_TASK_INTERVAL;
-import static org.apache.dubbo.common.constants.CommonConstants.CACHE_CLEAR_WAITING_THRESHOLD;
-import static org.apache.dubbo.common.constants.CommonConstants.CHECK_KEY;
-import static org.apache.dubbo.common.constants.CommonConstants.DUBBO;
-import static org.apache.dubbo.common.constants.CommonConstants.PATH_SEPARATOR;
-import static org.apache.dubbo.common.constants.CommonConstants.PROTOCOL_SEPARATOR_ENCODED;
-import static org.apache.dubbo.common.constants.RegistryConstants.CATEGORY_KEY;
-import static org.apache.dubbo.common.constants.RegistryConstants.EMPTY_PROTOCOL;
-import static org.apache.dubbo.common.constants.RegistryConstants.PROVIDERS_CATEGORY;
-import static org.apache.dubbo.common.url.component.DubboServiceAddressURL.PROVIDER_FIRST_KEYS;
 
 /**
  * Useful for registries who's sdk returns raw string as provider instance, for example, zookeeper and etcd.
@@ -138,6 +138,7 @@ public abstract class CacheableFailbackRegistry extends FailbackRegistry {
             newURLs = new HashMap<>();
             for (String rawProvider : providers) {
                 rawProvider = stripOffVariableKeys(rawProvider);
+                // todo
                 ServiceAddressURL cachedURL = createURL(rawProvider, copyOfConsumer, getExtraParameters());
                 if (cachedURL == null) {
                     logger.warn("Invalid address, failed to parse into URL " + rawProvider);
@@ -226,6 +227,7 @@ public abstract class CacheableFailbackRegistry extends FailbackRegistry {
         param.setTimestamp(System.currentTimeMillis());
 
         ServiceAddressURL cachedURL = createServiceURL(address, param, consumerURL);
+        // todo
         if (isMatch(consumerURL, cachedURL)) {
             return cachedURL;
         }

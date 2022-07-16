@@ -53,16 +53,18 @@ public abstract class AbstractRegistryFactory implements RegistryFactory {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractRegistryFactory.class);
 
     // The lock for the acquisition process of the registry
+    // 在创建 注册中心对象或者 销毁注册中心对象的时候会用到 锁
     protected static final ReentrantLock LOCK = new ReentrantLock();
 
     // Registry Collection Map<RegistryAddress, Registry>
+    // 缓存 注册中心对象使用  key就是注册中心url的一个toServiceString， value是注册中心对象
     protected static final Map<String, Registry> REGISTRIES = new HashMap<>();
 
     private static final AtomicBoolean destroyed = new AtomicBoolean(false);
 
     /**
      * Get all registries
-     *
+     * 获取所有的registry
      * @return all registries
      */
     public static Collection<Registry> getRegistries() {
@@ -84,6 +86,7 @@ public abstract class AbstractRegistryFactory implements RegistryFactory {
 
     /**
      * Close all created registries
+     *
      */
     public static void destroyAll() {
         if (!destroyed.compareAndSet(false, true)) {
@@ -96,6 +99,7 @@ public abstract class AbstractRegistryFactory implements RegistryFactory {
         // Lock up the registry shutdown process
         LOCK.lock();
         try {
+            // 循环注销各个registry  ， 最后再清空registry缓存
             for (Registry registry : getRegistries()) {
                 try {
                     registry.destroy();
@@ -162,6 +166,7 @@ public abstract class AbstractRegistryFactory implements RegistryFactory {
             if (registry == null) {
                 throw new IllegalStateException("Can not create registry " + url);
             }
+            //将 registry添加到缓存中去
             REGISTRIES.put(key, registry);
             return registry;
         } finally {

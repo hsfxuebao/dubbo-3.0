@@ -16,14 +16,14 @@
  */
 package com.alibaba.dubbo.registry.support;
 
-import org.apache.dubbo.common.URL;
-import org.apache.dubbo.registry.NotifyListener;
-import org.apache.dubbo.registry.Registry;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import org.apache.dubbo.common.URL;
+import org.apache.dubbo.registry.NotifyListener;
+import org.apache.dubbo.registry.Registry;
 
 /**
  * 2019-04-16
@@ -126,6 +126,7 @@ public abstract class AbstractRegistry implements Registry {
 
     static class CompatibleAbstractRegistry extends org.apache.dubbo.registry.support.AbstractRegistry {
         public CompatibleAbstractRegistry(URL url) {
+
             super(url);
         }
 

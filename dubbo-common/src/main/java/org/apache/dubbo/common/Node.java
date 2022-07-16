@@ -23,20 +23,21 @@ public interface Node {
 
     /**
      * get url.
-     *
+     * 获取url
      * @return url.
      */
     URL getUrl();
 
     /**
      * is available.
-     *
+     *  是否可用
      * @return available.
      */
     boolean isAvailable();
 
     /**
      * destroy.
+     * 销毁
      */
     void destroy();
 

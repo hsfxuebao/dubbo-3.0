@@ -16,15 +16,15 @@
  */
 package org.apache.dubbo.remoting.zookeeper.curator;
 
-import org.apache.dubbo.common.URL;
-import org.apache.dubbo.common.config.configcenter.ConfigItem;
-import org.apache.dubbo.common.logger.Logger;
-import org.apache.dubbo.common.logger.LoggerFactory;
-import org.apache.dubbo.remoting.zookeeper.ChildListener;
-import org.apache.dubbo.remoting.zookeeper.DataListener;
-import org.apache.dubbo.remoting.zookeeper.EventType;
-import org.apache.dubbo.remoting.zookeeper.StateListener;
-import org.apache.dubbo.remoting.zookeeper.AbstractZookeeperClient;
+import static org.apache.dubbo.common.constants.CommonConstants.TIMEOUT_KEY;
+
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
@@ -35,22 +35,21 @@ import org.apache.curator.framework.recipes.cache.NodeCacheListener;
 import org.apache.curator.framework.state.ConnectionState;
 import org.apache.curator.framework.state.ConnectionStateListener;
 import org.apache.curator.retry.RetryNTimes;
+import org.apache.dubbo.common.URL;
+import org.apache.dubbo.common.config.configcenter.ConfigItem;
+import org.apache.dubbo.common.logger.Logger;
+import org.apache.dubbo.common.logger.LoggerFactory;
+import org.apache.dubbo.remoting.zookeeper.AbstractZookeeperClient;
+import org.apache.dubbo.remoting.zookeeper.ChildListener;
+import org.apache.dubbo.remoting.zookeeper.DataListener;
+import org.apache.dubbo.remoting.zookeeper.EventType;
+import org.apache.dubbo.remoting.zookeeper.StateListener;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException.NoNodeException;
 import org.apache.zookeeper.KeeperException.NodeExistsException;
 import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;
 import org.apache.zookeeper.data.Stat;
-
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executor;
-import java.util.concurrent.TimeUnit;
-
-import static org.apache.dubbo.common.constants.CommonConstants.TIMEOUT_KEY;
 
 
 public class CuratorZookeeperClient extends AbstractZookeeperClient<CuratorZookeeperClient.NodeCacheListenerImpl, CuratorZookeeperClient.CuratorWatcherImpl> {
@@ -65,6 +64,7 @@ public class CuratorZookeeperClient extends AbstractZookeeperClient<CuratorZooke
     public CuratorZookeeperClient(URL url) {
         super(url);
         try {
+            // 创建builder
             int timeout = url.getParameter(TIMEOUT_KEY, DEFAULT_CONNECTION_TIMEOUT_MS);
             int sessionExpireMs = url.getParameter(ZK_SESSION_EXPIRE_KEY, DEFAULT_SESSION_TIMEOUT_MS);
             CuratorFrameworkFactory.Builder builder = CuratorFrameworkFactory.builder()
@@ -76,7 +76,9 @@ public class CuratorZookeeperClient extends AbstractZookeeperClient<CuratorZooke
             if (authority != null && authority.length() > 0) {
                 builder = builder.authorization("digest", authority.getBytes());
             }
+            // 创建client
             client = builder.build();
+            // 添加状态监听器
             client.getConnectionStateListenable().addListener(new CuratorConnectionStateListener(url));
             client.start();
             boolean connected = client.blockUntilConnected(timeout, TimeUnit.MILLISECONDS);
@@ -88,6 +90,7 @@ public class CuratorZookeeperClient extends AbstractZookeeperClient<CuratorZooke
         }
     }
 
+    // 创建永久节点
     @Override
     public void createPersistent(String path) {
         try {
@@ -98,7 +101,7 @@ public class CuratorZookeeperClient extends AbstractZookeeperClient<CuratorZooke
             throw new IllegalStateException(e.getMessage(), e);
         }
     }
-
+    // 创建临时节点
     @Override
     public void createEphemeral(String path) {
         try {
@@ -183,7 +186,7 @@ public class CuratorZookeeperClient extends AbstractZookeeperClient<CuratorZooke
             throw new IllegalStateException(e.getMessage(), e);
         }
     }
-
+    // 删除节点
     @Override
     protected void deletePath(String path) {
         try {
@@ -346,6 +349,7 @@ public class CuratorZookeeperClient extends AbstractZookeeperClient<CuratorZooke
         }
     }
 
+    // 实现了CuratorWatcher接口
     static class CuratorWatcherImpl implements CuratorWatcher {
 
         private CuratorFramework client;
@@ -372,7 +376,7 @@ public class CuratorZookeeperClient extends AbstractZookeeperClient<CuratorZooke
             if (event.getType() == Watcher.Event.EventType.None) {
                 return;
             }
-
+            // 获取当前监听器节点的子节点
             if (childListener != null) {
                 childListener.childChanged(path, client.getChildren().usingWatcher(this).forPath(path));
             }

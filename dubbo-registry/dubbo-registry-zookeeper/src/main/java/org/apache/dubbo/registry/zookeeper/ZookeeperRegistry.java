@@ -60,12 +60,13 @@ public class ZookeeperRegistry extends CacheableFailbackRegistry {
 
     private final static String DEFAULT_ROOT = "dubbo";
 
+    // 根路径
     private final String root;
 
     private final Set<String> anyServices = new ConcurrentHashSet<>();
-
+    // 缓存的订阅listener
     private final ConcurrentMap<URL, ConcurrentMap<NotifyListener, ChildListener>> zkListeners = new ConcurrentHashMap<>();
-
+    // zk客户端
     private final ZookeeperClient zkClient;
 
     public ZookeeperRegistry(URL url, ZookeeperTransporter zookeeperTransporter) {
@@ -73,14 +74,16 @@ public class ZookeeperRegistry extends CacheableFailbackRegistry {
         if (url.isAnyHost()) {
             throw new IllegalStateException("registry address == null");
         }
+        // group  默认dubbo 获取根路径
         String group = url.getGroup(DEFAULT_ROOT);
         if (!group.startsWith(PATH_SEPARATOR)) {
             group = PATH_SEPARATOR + group;
         }
         this.root = group;
-        // 创建zk客户端，与zk进行连接
+        // 创建zk客户端，与zk进行连接 默认使用curator
         zkClient = zookeeperTransporter.connect(url);
         zkClient.addStateListener((state) -> {
+            // 状态是 已连接的 时候
             if (state == StateListener.RECONNECTED) {
                 logger.warn("Trying to fetch the latest urls, in case there're provider changes during connection loss.\n" +
                         " Since ephemeral ZNode will not get deleted for a connection lose, " +
@@ -89,6 +92,7 @@ public class ZookeeperRegistry extends CacheableFailbackRegistry {
             } else if (state == StateListener.NEW_SESSION_CREATED) {
                 logger.warn("Trying to re-register urls and re-subscribe listeners of this instance to registry...");
                 try {
+                    // 恢复 注册 与订阅
                     ZookeeperRegistry.this.recover();
                 } catch (Exception e) {
                     logger.error(e.getMessage(), e);
@@ -141,19 +145,25 @@ public class ZookeeperRegistry extends CacheableFailbackRegistry {
     public void doSubscribe(final URL url, final NotifyListener listener) {
         try {
             // 处理<dubbo:reference/>的interface属性为"*"的情况
+            // * 表示所有
             if (ANY_VALUE.equals(url.getServiceInterface())) {
+                // 根路径
                 String root = toRootPath();
+                // 根据url获取那些订阅的listener,不存在就新建一个
                 ConcurrentMap<NotifyListener, ChildListener> listeners = zkListeners.computeIfAbsent(url, k -> new ConcurrentHashMap<>());
                 ChildListener zkListener = listeners.computeIfAbsent(listener, k -> (parentPath, currentChilds) -> {
+                    // 遍历child节点
                     for (String child : currentChilds) {
                         child = URL.decode(child);
                         if (!anyServices.contains(child)) {
                             anyServices.add(child);
+                            // 订阅
                             subscribe(url.setPath(child).addParameters(INTERFACE_KEY, child,
                                     Constants.CHECK_KEY, String.valueOf(false)), k);
                         }
                     }
                 });
+                // 创建 永久节点
                 zkClient.create(root, false);
                 List<String> services = zkClient.addChildListener(root, zkListener);
                 if (CollectionUtils.isNotEmpty(services)) {
@@ -248,10 +258,12 @@ public class ZookeeperRegistry extends CacheableFailbackRegistry {
     }
 
     private String toServicePath(URL url) {
+        // 接口全类名
         String name = url.getServiceInterface();
         if (ANY_VALUE.equals(name)) {
             return toRootPath();
         }
+        //   "/dubbo/xxx.xxx.xxx.Xxxx"
         return toRootDir() + URL.encode(name);
     }
 
@@ -270,10 +282,13 @@ public class ZookeeperRegistry extends CacheableFailbackRegistry {
     }
 
     private String toCategoryPath(URL url) {
+        // "/dubbo/xxx.xxx.xxx.Xxxx/gategory(providers)"
         return toServicePath(url) + PATH_SEPARATOR + url.getCategory(DEFAULT_CATEGORY);
     }
 
+    // 将url转成 urlPath
     private String toUrlPath(URL url) {
+        //  "/dubbo/xxx.xxx.xxx.Xxxx/gategory(providers)/urlfullString"
         return toCategoryPath(url) + PATH_SEPARATOR + URL.encode(url.toFullString());
     }
 

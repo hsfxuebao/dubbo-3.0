@@ -16,19 +16,6 @@
  */
 package org.apache.dubbo.common.utils;
 
-import org.apache.dubbo.common.URL;
-import org.apache.dubbo.common.URLStrParser;
-import org.apache.dubbo.common.constants.RemotingConstants;
-import org.apache.dubbo.common.url.component.ServiceConfigURL;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-
 import static java.util.Collections.emptyMap;
 import static org.apache.dubbo.common.constants.CommonConstants.ANY_VALUE;
 import static org.apache.dubbo.common.constants.CommonConstants.CLASSIFIER_KEY;
@@ -59,6 +46,19 @@ import static org.apache.dubbo.common.constants.RegistryConstants.ROUTERS_CATEGO
 import static org.apache.dubbo.common.constants.RegistryConstants.ROUTE_PROTOCOL;
 import static org.apache.dubbo.common.constants.RegistryConstants.SERVICE_REGISTRY_PROTOCOL;
 import static org.apache.dubbo.common.constants.RegistryConstants.SERVICE_REGISTRY_TYPE;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+
+import org.apache.dubbo.common.URL;
+import org.apache.dubbo.common.URLStrParser;
+import org.apache.dubbo.common.constants.RemotingConstants;
+import org.apache.dubbo.common.url.component.ServiceConfigURL;
 
 public class UrlUtils {
 
@@ -386,33 +386,43 @@ public class UrlUtils {
     }
 
     public static boolean isMatch(URL consumerUrl, URL providerUrl) {
+        // 获取接口
         String consumerInterface = consumerUrl.getServiceInterface();
+        // 获取接口
         String providerInterface = providerUrl.getServiceInterface();
         //FIXME accept providerUrl with '*' as interface name, after carefully thought about all possible scenarios I think it's ok to add this condition.
+        // conusmerInterface 不是 *  或者consumerInterface 与providerInterface 不相等
         if (!(ANY_VALUE.equals(consumerInterface)
                 || ANY_VALUE.equals(providerInterface)
                 || StringUtils.isEquals(consumerInterface, providerInterface))) {
             return false;
         }
-
+        // category 是符合要求的
         if (!isMatchCategory(providerUrl.getCategory(DEFAULT_CATEGORY),
                 consumerUrl.getCategory(DEFAULT_CATEGORY))) {
             return false;
         }
+        // provider enable 是false && consumer enable不是*
         if (!providerUrl.getParameter(ENABLED_KEY, true)
                 && !ANY_VALUE.equals(consumerUrl.getParameter(ENABLED_KEY))) {
             return false;
         }
 
+        // group
         String consumerGroup = consumerUrl.getGroup();
+        // version
         String consumerVersion = consumerUrl.getVersion();
+        // Classifier 默认是*
         String consumerClassifier = consumerUrl.getParameter(CLASSIFIER_KEY, ANY_VALUE);
 
         String providerGroup = providerUrl.getGroup();
         String providerVersion = providerUrl.getVersion();
         String providerClassifier = providerUrl.getParameter(CLASSIFIER_KEY, ANY_VALUE);
+                // consumer category 是*  或者  category 相等 或者 consumer category 中包含着provider的category
         return (ANY_VALUE.equals(consumerGroup) || StringUtils.isEquals(consumerGroup, providerGroup) || StringUtils.isContains(consumerGroup, providerGroup))
+                // consumer的version 是*  或者 两个version相等
                 && (ANY_VALUE.equals(consumerVersion) || StringUtils.isEquals(consumerVersion, providerVersion))
+                // consumerClassifier 是null 或者consumerClassifier 是* 或者相等
                 && (consumerClassifier == null || ANY_VALUE.equals(consumerClassifier) || StringUtils.isEquals(consumerClassifier, providerClassifier));
     }
 

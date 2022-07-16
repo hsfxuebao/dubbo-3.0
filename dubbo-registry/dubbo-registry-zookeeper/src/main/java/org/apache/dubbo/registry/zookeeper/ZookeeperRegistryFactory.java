@@ -34,6 +34,7 @@ public class ZookeeperRegistryFactory extends AbstractRegistryFactory {
     }
 
     @DisableInject
+    // 由dubbo spi自动注入 zk客户端
     public void setZookeeperTransporter(ZookeeperTransporter zookeeperTransporter) {
         this.zookeeperTransporter = zookeeperTransporter;
     }
